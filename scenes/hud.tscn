@@ -23,10 +23,17 @@ layout_mode = 2
 layout_mode = 2
 text = "Squad: 1"
 
-[node name="SuperchargeBar" type="ProgressBar" parent="Margin/VBox"]
+[node name="WeaponLabel" type="Label" parent="Margin/VBox"]
 layout_mode = 2
-max_value = 100.0
-value = 0.0
+text = "Weapon: Tier 1"
+
+[node name="DistanceLabel" type="Label" parent="Margin/VBox"]
+layout_mode = 2
+text = "Distance: 0 m"
+
+[node name="HintLabel" type="Label" parent="Margin/VBox"]
+layout_mode = 2
+text = "A/D or Left/Right to strafe"
 
 [node name="GameOverLabel" type="Label" parent="Margin/VBox"]
 layout_mode = 2

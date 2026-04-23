@@ -1,44 +1,55 @@
 extends Node
 
-# Autoload singleton. Tracks squad size, supercharge, and tuning constants.
+# Autoload singleton. Tracks squad, weapon tier, and tuning constants.
 # Referenced from any script as `GameManager.<name>`.
 
 signal squad_size_changed(new_size: int)
-signal supercharge_changed(fill_pct: float)
+signal weapon_tier_changed(new_tier: int)
 signal game_over(distance_traveled: float)
 
-const FORCE_PER_ZOMBIE := 1.0
-const RESISTANCE_PER_CLONE := 3.0
-const PUSH_SPEED_SCALE := 0.5
+const FORWARD_SPEED := 5.0
+const STRAFE_SPEED := 7.0
 const BRIDGE_HALF_WIDTH := 2.0
-const BRIDGE_LENGTH := 30.0
 
-const SUPERCHARGE_FILL_RATE := 10.0
-const SUPERCHARGE_MAX := 100.0
-const SUPERCHARGE_BONUS_MIN := 2
-const SUPERCHARGE_BONUS_MAX := 4
+const WEAPON_TIERS := [
+	{"damage": 1, "fire_rate": 1.0, "bullet_speed": 20.0},
+	{"damage": 1, "fire_rate": 2.0, "bullet_speed": 22.0},
+	{"damage": 2, "fire_rate": 2.0, "bullet_speed": 24.0},
+	{"damage": 2, "fire_rate": 3.0, "bullet_speed": 26.0},
+	{"damage": 3, "fire_rate": 3.0, "bullet_speed": 28.0},
+	{"damage": 3, "fire_rate": 4.0, "bullet_speed": 30.0},
+]
 
 var squad_size: int = 1
-var supercharge: float = 0.0
+var weapon_tier: int = 0
 var distance_traveled: float = 0.0
 var is_running: bool = false
 
 
 func reset() -> void:
 	squad_size = 1
-	supercharge = 0.0
+	weapon_tier = 0
 	distance_traveled = 0.0
 	is_running = true
 	squad_size_changed.emit(squad_size)
-	supercharge_changed.emit(supercharge)
+	weapon_tier_changed.emit(weapon_tier)
 
 
-func _process(delta: float) -> void:
-	if not is_running:
-		return
-	if supercharge < SUPERCHARGE_MAX:
-		supercharge = min(SUPERCHARGE_MAX, supercharge + SUPERCHARGE_FILL_RATE * delta)
-		supercharge_changed.emit(supercharge)
+func weapon_damage() -> int:
+	return WEAPON_TIERS[weapon_tier].damage
+
+
+func weapon_fire_rate() -> float:
+	return WEAPON_TIERS[weapon_tier].fire_rate
+
+
+func weapon_bullet_speed() -> float:
+	return WEAPON_TIERS[weapon_tier].bullet_speed
+
+
+func upgrade_weapon(steps: int = 1) -> void:
+	weapon_tier = min(WEAPON_TIERS.size() - 1, weapon_tier + steps)
+	weapon_tier_changed.emit(weapon_tier)
 
 
 func apply_multiplier(multiplier: int) -> int:
@@ -61,17 +72,14 @@ func remove_clone() -> void:
 		game_over.emit(distance_traveled)
 
 
-func try_trigger_supercharge() -> int:
-	if supercharge < SUPERCHARGE_MAX:
-		return 0
-	supercharge = 0.0
-	supercharge_changed.emit(supercharge)
-	var bonus := randi_range(SUPERCHARGE_BONUS_MIN, SUPERCHARGE_BONUS_MAX)
-	add_clones(bonus)
-	return bonus
+func end_run() -> void:
+	if not is_running:
+		return
+	is_running = false
+	game_over.emit(distance_traveled)
 
 
-func compute_net_push(zombie_count: int) -> float:
-	var push := zombie_count * FORCE_PER_ZOMBIE
-	var resist := squad_size * RESISTANCE_PER_CLONE
-	return push - resist
+func kill_leader() -> void:
+	squad_size = 0
+	squad_size_changed.emit(squad_size)
+	end_run()

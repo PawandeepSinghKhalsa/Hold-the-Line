@@ -1,28 +1,70 @@
-[gd_scene load_steps=4 format=3]
+[gd_scene load_steps=7 format=3]
 
 [ext_resource type="Script" path="res://scripts/gate.gd" id="1_gate"]
 [ext_resource type="PackedScene" path="res://scenes/clone.tscn" id="2_clone"]
 
-[sub_resource type="BoxShape3D" id="BoxShape3D_gate"]
-size = Vector3(4, 3, 0.4)
+[sub_resource type="BoxShape3D" id="BoxShape3D_half"]
+size = Vector3(2, 3, 0.4)
 
-[sub_resource type="BoxMesh" id="BoxMesh_gate"]
-size = Vector3(4, 3, 0.1)
+[sub_resource type="BoxMesh" id="BoxMesh_half"]
+size = Vector3(2, 3, 0.1)
 
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_gate"]
-albedo_color = Color(0.9, 0.4, 0.9, 0.5)
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_weapon"]
+albedo_color = Color(0.25, 0.6, 1, 0.55)
 transparency = 1
+emission_enabled = true
+emission = Color(0.25, 0.6, 1, 1)
+emission_energy_multiplier = 0.3
 
-[node name="Gate" type="Area3D"]
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_squad"]
+albedo_color = Color(1, 0.3, 0.8, 0.55)
+transparency = 1
+emission_enabled = true
+emission = Color(1, 0.3, 0.8, 1)
+emission_energy_multiplier = 0.3
+
+[node name="Gate" type="Node3D"]
 script = ExtResource("1_gate")
 clone_scene = ExtResource("2_clone")
-multiplier = 2
+squad_multiplier = 2
+weapon_upgrade_steps = 1
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5, 0)
-shape = SubResource("BoxShape3D_gate")
+[node name="LeftHalf" type="Area3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1, 0, 0)
 
-[node name="Mesh" type="MeshInstance3D" parent="."]
+[node name="CollisionShape3D" type="CollisionShape3D" parent="LeftHalf"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5, 0)
-mesh = SubResource("BoxMesh_gate")
-material_override = SubResource("StandardMaterial3D_gate")
+shape = SubResource("BoxShape3D_half")
+
+[node name="Mesh" type="MeshInstance3D" parent="LeftHalf"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5, 0)
+mesh = SubResource("BoxMesh_half")
+material_override = SubResource("StandardMaterial3D_weapon")
+
+[node name="Label" type="Label3D" parent="LeftHalf"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3.3, 0)
+text = "WEAPON +1"
+font_size = 48
+outline_size = 12
+modulate = Color(0.85, 0.95, 1, 1)
+billboard = 1
+
+[node name="RightHalf" type="Area3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1, 0, 0)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="RightHalf"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5, 0)
+shape = SubResource("BoxShape3D_half")
+
+[node name="Mesh" type="MeshInstance3D" parent="RightHalf"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5, 0)
+mesh = SubResource("BoxMesh_half")
+material_override = SubResource("StandardMaterial3D_squad")
+
+[node name="Label" type="Label3D" parent="RightHalf"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3.3, 0)
+text = "x2 SQUAD"
+font_size = 48
+outline_size = 12
+modulate = Color(1, 0.9, 1, 1)
+billboard = 1

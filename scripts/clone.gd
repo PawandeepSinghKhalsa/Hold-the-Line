@@ -1,16 +1,19 @@
 extends CharacterBody3D
 
-# A squad member. Follows the soldier with an offset, shoots the nearest zombie
-# on a fixed cadence. Dies when a zombie touches it in melee range.
+# Follows leader with offset. Auto-fires using shared weapon stats from
+# GameManager. Dies on zombie melee contact.
 
 @export var follow_offset: Vector3 = Vector3(0, 0, 1.0)
-@export var fire_rate: float = 1.0
 @export var bullet_scene: PackedScene
 @export var melee_damage_interval: float = 2.0
 
 var leader: Node3D
 var _fire_cooldown: float = 0.0
 var _melee_cooldown: float = 0.0
+
+
+func _ready() -> void:
+	add_to_group("shooters")
 
 
 func _physics_process(delta: float) -> void:
@@ -25,7 +28,7 @@ func _physics_process(delta: float) -> void:
 	_fire_cooldown -= delta
 	if _fire_cooldown <= 0.0:
 		_try_shoot()
-		_fire_cooldown = 1.0 / fire_rate
+		_fire_cooldown = 1.0 / GameManager.weapon_fire_rate()
 
 	_melee_cooldown = max(0.0, _melee_cooldown - delta)
 

@@ -25,9 +25,10 @@ func _physics_process(_delta: float) -> void:
 		velocity = dir.normalized() * walk_speed
 	move_and_slide()
 
-	for clone in get_tree().get_nodes_in_group("clones"):
-		if global_position.distance_to(clone.global_position) < melee_range:
-			clone.take_melee_hit()
+	for shooter in get_tree().get_nodes_in_group("shooters"):
+		if global_position.distance_to(shooter.global_position) < melee_range:
+			if shooter.has_method("take_melee_hit"):
+				shooter.take_melee_hit()
 			break
 
 
