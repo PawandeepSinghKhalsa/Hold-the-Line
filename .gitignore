@@ -20,5 +20,5 @@ Thumbs.db
 
 # Exports
 export.cfg
-export_presets.cfg
 builds/
+build/
