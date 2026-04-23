@@ -1,0 +1,33 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/hud.gd" id="1_hud"]
+
+[node name="HUD" type="CanvasLayer"]
+script = ExtResource("1_hud")
+
+[node name="Margin" type="MarginContainer" parent="."]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 16.0
+offset_top = 16.0
+offset_right = -16.0
+offset_bottom = -16.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="VBox" type="VBoxContainer" parent="Margin"]
+layout_mode = 2
+
+[node name="SquadLabel" type="Label" parent="Margin/VBox"]
+layout_mode = 2
+text = "Squad: 1"
+
+[node name="SuperchargeBar" type="ProgressBar" parent="Margin/VBox"]
+layout_mode = 2
+max_value = 100.0
+value = 0.0
+
+[node name="GameOverLabel" type="Label" parent="Margin/VBox"]
+layout_mode = 2
+text = "You fell."

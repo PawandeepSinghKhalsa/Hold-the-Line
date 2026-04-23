@@ -1,0 +1,28 @@
+[gd_scene load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scripts/gate.gd" id="1_gate"]
+[ext_resource type="PackedScene" path="res://scenes/clone.tscn" id="2_clone"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_gate"]
+size = Vector3(4, 3, 0.4)
+
+[sub_resource type="BoxMesh" id="BoxMesh_gate"]
+size = Vector3(4, 3, 0.1)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_gate"]
+albedo_color = Color(0.9, 0.4, 0.9, 0.5)
+transparency = 1
+
+[node name="Gate" type="Area3D"]
+script = ExtResource("1_gate")
+clone_scene = ExtResource("2_clone")
+multiplier = 2
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5, 0)
+shape = SubResource("BoxShape3D_gate")
+
+[node name="Mesh" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5, 0)
+mesh = SubResource("BoxMesh_gate")
+material_override = SubResource("StandardMaterial3D_gate")
