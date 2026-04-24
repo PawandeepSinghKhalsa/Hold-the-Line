@@ -20,6 +20,28 @@ func _ready() -> void:
 	hp = max_hp
 	add_to_group("zombies")
 	_target_jitter = Vector3(randf_range(-0.8, 0.8), 0.0, randf_range(-0.4, 0.4))
+	_apply_tough_appearance_if_needed()
+
+
+func _apply_tough_appearance_if_needed() -> void:
+	# Tough zombies (max_hp >= 2) get a darker body so the player can spot
+	# them and prioritise. Duplicate the material so each instance owns
+	# its override colour.
+	if max_hp < 2:
+		return
+	var mesh_node: Node = get_node_or_null("Mesh")
+	var mesh_instance: MeshInstance3D = mesh_node as MeshInstance3D
+	if mesh_instance == null or mesh_instance.material_override == null:
+		return
+	var unique_material: Material = mesh_instance.material_override.duplicate() as Material
+	mesh_instance.material_override = unique_material
+	var standard_mat: StandardMaterial3D = unique_material as StandardMaterial3D
+	if standard_mat == null:
+		return
+	if max_hp >= 3:
+		standard_mat.albedo_color = Color(0.35, 0.08, 0.15, 1)
+	else:
+		standard_mat.albedo_color = Color(0.55, 0.12, 0.18, 1)
 
 
 func _physics_process(_delta: float) -> void:

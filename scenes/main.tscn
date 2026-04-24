@@ -8,16 +8,16 @@
 [ext_resource type="PackedScene" path="res://scenes/gate.tscn" id="6_gate"]
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_bridge"]
-size = Vector3(4.5, 0.4, 100)
+size = Vector3(4.5, 0.4, 160)
 
 [sub_resource type="BoxMesh" id="BoxMesh_bridge"]
-size = Vector3(4.5, 0.4, 100)
+size = Vector3(4.5, 0.4, 160)
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_bridge"]
 albedo_color = Color(0.45, 0.38, 0.3, 1)
 
 [sub_resource type="BoxMesh" id="BoxMesh_lane_marker"]
-size = Vector3(0.08, 0.02, 100)
+size = Vector3(0.08, 0.02, 160)
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_marker"]
 albedo_color = Color(1, 0.92, 0.4, 1)
@@ -51,7 +51,7 @@ light_energy = 1.2
 shadow_enabled = true
 
 [node name="Bridge" type="StaticBody3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.2, -48)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.2, -78)
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="Bridge"]
 shape = SubResource("BoxShape3D_bridge")
@@ -61,12 +61,12 @@ mesh = SubResource("BoxMesh_bridge")
 material_override = SubResource("StandardMaterial3D_bridge")
 
 [node name="LaneMarkerLeft" type="MeshInstance3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.75, 0.01, -48)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.75, 0.01, -78)
 mesh = SubResource("BoxMesh_lane_marker")
 material_override = SubResource("StandardMaterial3D_marker")
 
 [node name="LaneMarkerRight" type="MeshInstance3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.75, 0.01, -48)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.75, 0.01, -78)
 mesh = SubResource("BoxMesh_lane_marker")
 material_override = SubResource("StandardMaterial3D_marker")
 
@@ -105,8 +105,10 @@ horde_front_z = -24.0
 [node name="HordeSpawner" type="Node3D" parent="."]
 script = ExtResource("5_spawner")
 zombie_scene = ExtResource("4_zombie")
-zombies_per_lane = 34
-row_spacing = 1.2
-horde_front_z = -95.0
+zombies_per_lane = 50
+row_spacing = 1.0
+horde_front_z = -105.0
+tough_rows_from_back = 20
+tough_hp = 2
 
 [node name="HUD" parent="." instance=ExtResource("2_hud")]
