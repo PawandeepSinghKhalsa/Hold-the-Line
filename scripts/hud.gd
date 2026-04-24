@@ -54,6 +54,9 @@ func _ready() -> void:
 	_on_supercharge_boost_changed(GameManager.is_boost_active(), 0.0)
 	_on_weapon_changed(GameManager.active_weapon, GameManager.weapon_time_left())
 	level_label.text = LevelManager.current_name()
+	if GameManager.is_endless:
+		level_label.text = "Endless — Wave %d" % GameManager.wave_number
+		GameManager.wave_advanced.connect(_on_wave_advanced)
 	var soldier_node: Node = get_tree().get_first_node_in_group("soldier")
 	if soldier_node != null:
 		if soldier_node.has_signal("lane_changed"):
@@ -215,6 +218,10 @@ func _on_run_ended(won: bool) -> void:
 func _on_main_menu_pressed() -> void:
 	get_tree().paused = false
 	LevelManager.go_to_title()
+
+
+func _on_wave_advanced(wave: int) -> void:
+	level_label.text = "Endless — Wave %d" % wave
 
 
 func _on_post_run_pressed() -> void:

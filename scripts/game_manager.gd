@@ -49,8 +49,11 @@ const WEAPON_NAMES: Dictionary = {
 }
 
 signal weapon_changed(weapon_id: int, time_left: float)
+signal wave_advanced(new_wave: int)
 
 var is_running: bool = false
+var is_endless: bool = false
+var wave_number: int = 0
 var zombies_total: int = 0
 var zombies_remaining: int = 0
 var kills_this_run: int = 0
@@ -75,6 +78,8 @@ func _process(delta: float) -> void:
 
 func reset() -> void:
 	is_running = true
+	is_endless = false
+	wave_number = 0
 	zombies_total = 0
 	zombies_remaining = 0
 	kills_this_run = 0
@@ -110,8 +115,15 @@ func on_zombie_killed() -> void:
 	kills_this_run += 1
 	zombies_remaining = max(0, zombies_remaining - 1)
 	zombies_remaining_changed.emit(zombies_remaining)
-	if zombies_remaining == 0:
+	# Endless mode only ends when the leader dies — running out of
+	# zombies mid-wave just means the next wave is coming.
+	if not is_endless and zombies_remaining == 0:
 		end_run(true)
+
+
+func advance_wave() -> void:
+	wave_number += 1
+	wave_advanced.emit(wave_number)
 
 
 # Called by clones when a zombie kills them. Drops squad size but keeps

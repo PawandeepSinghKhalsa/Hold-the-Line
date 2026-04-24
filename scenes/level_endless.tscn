@@ -1,0 +1,97 @@
+[gd_scene load_steps=12 format=3]
+
+[ext_resource type="PackedScene" path="res://scenes/soldier.tscn" id="1_soldier"]
+[ext_resource type="PackedScene" path="res://scenes/hud.tscn" id="2_hud"]
+[ext_resource type="Script" path="res://scripts/camera_follow.gd" id="3_camera"]
+[ext_resource type="PackedScene" path="res://scenes/zombie.tscn" id="4_zombie"]
+[ext_resource type="Script" path="res://scripts/endless_spawner.gd" id="5_endless"]
+[ext_resource type="PackedScene" path="res://scenes/gate.tscn" id="6_gate"]
+[ext_resource type="Script" path="res://scripts/weapon_spawner.gd" id="8_weapon"]
+[ext_resource type="PackedScene" path="res://scenes/weapon_crate.tscn" id="9_crate"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_bridge"]
+size = Vector3(4.5, 0.4, 2000)
+
+[sub_resource type="BoxMesh" id="BoxMesh_bridge"]
+size = Vector3(4.5, 0.4, 2000)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_bridge"]
+albedo_color = Color(0.32, 0.27, 0.23, 1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_lane_marker"]
+size = Vector3(0.08, 0.02, 2000)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_marker"]
+albedo_color = Color(0.4, 1, 0.95, 1)
+emission_enabled = true
+emission = Color(0.3, 0.95, 0.9, 1)
+emission_energy_multiplier = 0.6
+
+[sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_sky"]
+sky_top_color = Color(0.04, 0.08, 0.12, 1)
+sky_horizon_color = Color(0.25, 0.4, 0.55, 1)
+ground_horizon_color = Color(0.1, 0.14, 0.18, 1)
+ground_bottom_color = Color(0.02, 0.04, 0.06, 1)
+
+[sub_resource type="Sky" id="Sky_main"]
+sky_material = SubResource("ProceduralSkyMaterial_sky")
+
+[sub_resource type="Environment" id="Environment_main"]
+background_mode = 2
+sky = SubResource("Sky_main")
+ambient_light_source = 3
+tonemap_mode = 2
+
+[node name="Main" type="Node3D"]
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource("Environment_main")
+
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
+transform = Transform3D(0.866, -0.25, 0.433, 0, 0.866, 0.5, -0.5, -0.433, 0.75, 0, 10, 0)
+light_energy = 1.2
+shadow_enabled = true
+
+[node name="Bridge" type="StaticBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.2, -998)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Bridge"]
+shape = SubResource("BoxShape3D_bridge")
+
+[node name="Mesh" type="MeshInstance3D" parent="Bridge"]
+mesh = SubResource("BoxMesh_bridge")
+material_override = SubResource("StandardMaterial3D_bridge")
+
+[node name="LaneMarkerLeft" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.75, 0.01, -998)
+mesh = SubResource("BoxMesh_lane_marker")
+material_override = SubResource("StandardMaterial3D_marker")
+
+[node name="LaneMarkerRight" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.75, 0.01, -998)
+mesh = SubResource("BoxMesh_lane_marker")
+material_override = SubResource("StandardMaterial3D_marker")
+
+[node name="Soldier" parent="." instance=ExtResource("1_soldier")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.1, 2)
+
+[node name="Camera3D" type="Camera3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 0.866, 0.5, 0, -0.5, 0.866, 0, 4.5, 9)
+script = ExtResource("3_camera")
+target_path = NodePath("../Soldier")
+
+[node name="EndlessSpawner" type="Node3D" parent="."]
+script = ExtResource("5_endless")
+zombie_scene = ExtResource("4_zombie")
+gate_scene = ExtResource("6_gate")
+wave_interval = 8.0
+gate_interval = 18.0
+boss_interval = 45.0
+
+[node name="WeaponSpawner" type="Node3D" parent="."]
+script = ExtResource("8_weapon")
+crate_scene = ExtResource("9_crate")
+spawn_interval = 9.0
+spawn_ahead = 14.0
+
+[node name="HUD" parent="." instance=ExtResource("2_hud")]
