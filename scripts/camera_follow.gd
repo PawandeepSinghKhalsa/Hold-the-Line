@@ -1,9 +1,11 @@
 extends Camera3D
 
-# Follows target on Z only (no lateral slide when soldier strafes).
+# Follows the soldier on Z only. Keeps X centered so all 3 lanes are visible
+# without the camera sliding when the soldier changes lanes.
 
 @export var target_path: NodePath
-@export var offset: Vector3 = Vector3(0, 5, 7)
+@export var height: float = 4.5
+@export var distance_behind: float = 7.0
 
 var _target: Node3D
 
@@ -16,4 +18,8 @@ func _ready() -> void:
 func _process(_delta: float) -> void:
 	if _target == null:
 		return
-	global_position = Vector3(0, _target.global_position.y + offset.y, _target.global_position.z + offset.z)
+	global_position = Vector3(
+		0.0,
+		_target.global_position.y + height,
+		_target.global_position.z + distance_behind
+	)

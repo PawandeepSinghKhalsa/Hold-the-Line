@@ -19,13 +19,9 @@ grow_vertical = 2
 [node name="VBox" type="VBoxContainer" parent="Margin"]
 layout_mode = 2
 
-[node name="SquadLabel" type="Label" parent="Margin/VBox"]
+[node name="LaneLabel" type="Label" parent="Margin/VBox"]
 layout_mode = 2
-text = "Squad: 1"
-
-[node name="WeaponLabel" type="Label" parent="Margin/VBox"]
-layout_mode = 2
-text = "Weapon: Tier 1"
+text = "Lane: 2"
 
 [node name="DistanceLabel" type="Label" parent="Margin/VBox"]
 layout_mode = 2
@@ -33,8 +29,8 @@ text = "Distance: 0 m"
 
 [node name="HintLabel" type="Label" parent="Margin/VBox"]
 layout_mode = 2
-text = "A/D or Left/Right to strafe"
+text = "Tap left/right to switch lanes (or use A/D / Arrow keys)"
 
 [node name="GameOverLabel" type="Label" parent="Margin/VBox"]
 layout_mode = 2
-text = "You fell."
+text = "Game Over"

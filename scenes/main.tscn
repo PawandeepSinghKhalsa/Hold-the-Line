@@ -1,38 +1,40 @@
-[gd_scene load_steps=14 format=3]
+[gd_scene load_steps=11 format=3]
 
 [ext_resource type="PackedScene" path="res://scenes/soldier.tscn" id="1_soldier"]
-[ext_resource type="PackedScene" path="res://scenes/zombie.tscn" id="2_zombie"]
-[ext_resource type="PackedScene" path="res://scenes/gate.tscn" id="3_gate"]
-[ext_resource type="PackedScene" path="res://scenes/hud.tscn" id="4_hud"]
-[ext_resource type="Script" path="res://scripts/zombie_spawner.gd" id="5_spawner"]
-[ext_resource type="Script" path="res://scripts/camera_follow.gd" id="6_camera"]
-[ext_resource type="Script" path="res://scripts/goal.gd" id="7_goal"]
+[ext_resource type="PackedScene" path="res://scenes/hud.tscn" id="2_hud"]
+[ext_resource type="Script" path="res://scripts/camera_follow.gd" id="3_camera"]
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_bridge"]
-size = Vector3(4, 0.5, 120)
+size = Vector3(4.5, 0.4, 100)
 
 [sub_resource type="BoxMesh" id="BoxMesh_bridge"]
-size = Vector3(4, 0.5, 120)
+size = Vector3(4.5, 0.4, 100)
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_bridge"]
-albedo_color = Color(0.42, 0.35, 0.25, 1)
+albedo_color = Color(0.45, 0.38, 0.3, 1)
 
-[sub_resource type="BoxShape3D" id="BoxShape3D_goal"]
-size = Vector3(4, 3, 1)
+[sub_resource type="BoxMesh" id="BoxMesh_lane_marker"]
+size = Vector3(0.08, 0.02, 100)
 
-[sub_resource type="BoxMesh" id="BoxMesh_goal"]
-size = Vector3(4, 3, 0.2)
-
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_goal"]
-albedo_color = Color(0.3, 1, 0.4, 0.6)
-transparency = 1
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_marker"]
+albedo_color = Color(1, 0.92, 0.4, 1)
 emission_enabled = true
-emission = Color(0.3, 1, 0.4, 1)
+emission = Color(1, 0.85, 0.2, 1)
 emission_energy_multiplier = 0.4
 
+[sub_resource type="BoxMesh" id="BoxMesh_horde_marker"]
+size = Vector3(4.5, 4, 0.4)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_horde"]
+albedo_color = Color(0.8, 0.2, 0.2, 0.55)
+transparency = 1
+emission_enabled = true
+emission = Color(1, 0.3, 0.3, 1)
+emission_energy_multiplier = 0.3
+
 [sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_sky"]
-sky_top_color = Color(0.09, 0.12, 0.2, 1)
-sky_horizon_color = Color(0.4, 0.3, 0.35, 1)
+sky_top_color = Color(0.07, 0.09, 0.17, 1)
+sky_horizon_color = Color(0.35, 0.25, 0.3, 1)
 ground_horizon_color = Color(0.2, 0.15, 0.15, 1)
 ground_bottom_color = Color(0.05, 0.05, 0.05, 1)
 
@@ -56,7 +58,7 @@ light_energy = 1.2
 shadow_enabled = true
 
 [node name="Bridge" type="StaticBody3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.25, -55)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.2, -48)
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="Bridge"]
 shape = SubResource("BoxShape3D_bridge")
@@ -65,59 +67,27 @@ shape = SubResource("BoxShape3D_bridge")
 mesh = SubResource("BoxMesh_bridge")
 material_override = SubResource("StandardMaterial3D_bridge")
 
+[node name="LaneMarkerLeft" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.75, 0.01, -48)
+mesh = SubResource("BoxMesh_lane_marker")
+material_override = SubResource("StandardMaterial3D_marker")
+
+[node name="LaneMarkerRight" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.75, 0.01, -48)
+mesh = SubResource("BoxMesh_lane_marker")
+material_override = SubResource("StandardMaterial3D_marker")
+
+[node name="HordeEndMarker" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2, -98)
+mesh = SubResource("BoxMesh_horde_marker")
+material_override = SubResource("StandardMaterial3D_horde")
+
 [node name="Soldier" parent="." instance=ExtResource("1_soldier")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.1, 3)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.1, 2)
 
 [node name="Camera3D" type="Camera3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 0.866, 0.5, 0, -0.5, 0.866, 0, 5, 10)
-script = ExtResource("6_camera")
+transform = Transform3D(1, 0, 0, 0, 0.866, 0.5, 0, -0.5, 0.866, 0, 4.5, 9)
+script = ExtResource("3_camera")
 target_path = NodePath("../Soldier")
 
-[node name="Gate1" parent="." instance=ExtResource("3_gate")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -10)
-squad_multiplier = 2
-weapon_upgrade_steps = 1
-
-[node name="Gate2" parent="." instance=ExtResource("3_gate")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -25)
-squad_multiplier = 2
-weapon_upgrade_steps = 1
-
-[node name="Gate3" parent="." instance=ExtResource("3_gate")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -40)
-squad_multiplier = 3
-weapon_upgrade_steps = 1
-
-[node name="Gate4" parent="." instance=ExtResource("3_gate")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -60)
-squad_multiplier = 2
-weapon_upgrade_steps = 1
-
-[node name="Gate5" parent="." instance=ExtResource("3_gate")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -80)
-squad_multiplier = 3
-weapon_upgrade_steps = 1
-
-[node name="Gate6" parent="." instance=ExtResource("3_gate")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -100)
-squad_multiplier = 4
-weapon_upgrade_steps = 1
-
-[node name="Goal" type="Area3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -112)
-script = ExtResource("7_goal")
-
-[node name="CollisionShape3D" type="CollisionShape3D" parent="Goal"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5, 0)
-shape = SubResource("BoxShape3D_goal")
-
-[node name="Mesh" type="MeshInstance3D" parent="Goal"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5, 0)
-mesh = SubResource("BoxMesh_goal")
-material_override = SubResource("StandardMaterial3D_goal")
-
-[node name="ZombieSpawner" type="Node3D" parent="."]
-script = ExtResource("5_spawner")
-zombie_scene = ExtResource("2_zombie")
-
-[node name="HUD" parent="." instance=ExtResource("4_hud")]
+[node name="HUD" parent="." instance=ExtResource("2_hud")]
