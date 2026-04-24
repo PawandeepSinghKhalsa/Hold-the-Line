@@ -1,13 +1,23 @@
 extends Node3D
 
-# Split gate. Polls the soldier's position each frame instead of relying on
-# Area3D body_entered (which proved unreliable in the web export during
-# Phase 2). When the soldier's Z crosses the gate's Z, the side of the
-# soldier's X relative to the gate's centre determines which multiplier
-# fires, and the gate consumes itself.
+# Split gate. Each half has an operation (mul, add, sub, div) and a value.
+# When the soldier's Z crosses the gate's Z, the sign of their X relative
+# to the gate centre picks which half fires.
+#
+# Operations:
+#   mul N: squad *= N  (multiplicative, prints as "xN")
+#   add N: squad += N  (additive, prints as "+N")
+#   sub N: squad -= N  (penalty, prints as "-N")
+#   div N: squad /= N  (halving-style, prints as "/N")
+#
+# Positive deltas spawn new clones at the next free formation slots;
+# negative deltas despawn clones starting from the back of the formation
+# so the squad compacts toward the leader rather than leaving gaps.
 
-@export var left_multiplier: int = 2
-@export var right_multiplier: int = 3
+@export var left_op: String = "mul"
+@export var left_value: int = 2
+@export var right_op: String = "mul"
+@export var right_value: int = 3
 @export var clone_scene: PackedScene
 
 const TRIGGER_DEPTH := 0.6
@@ -18,9 +28,9 @@ var _soldier: Node3D = null
 
 func _ready() -> void:
 	if has_node("LeftHalf/Label"):
-		(get_node("LeftHalf/Label") as Label3D).text = "x%d" % left_multiplier
+		(get_node("LeftHalf/Label") as Label3D).text = _format_label(left_op, left_value)
 	if has_node("RightHalf/Label"):
-		(get_node("RightHalf/Label") as Label3D).text = "x%d" % right_multiplier
+		(get_node("RightHalf/Label") as Label3D).text = _format_label(right_op, right_value)
 
 
 func _process(_delta: float) -> void:
@@ -37,15 +47,30 @@ func _process(_delta: float) -> void:
 
 	_consumed = true
 	var dx: float = _soldier.global_position.x - global_position.x
-	var multiplier: int = left_multiplier if dx < 0.0 else right_multiplier
-	_apply(_soldier, multiplier)
+	if dx < 0.0:
+		_apply(_soldier, left_op, left_value)
+	else:
+		_apply(_soldier, right_op, right_value)
 	queue_free()
 
 
-func _apply(leader: Node3D, multiplier: int) -> void:
+func _apply(leader: Node3D, op: String, value: int) -> void:
 	var before: int = GameManager.squad_size
-	var spawned_count: int = GameManager.apply_multiplier(multiplier)
-	_spawn_clones(leader, before, spawned_count)
+	var delta: int = 0
+	match op:
+		"add":
+			delta = GameManager.apply_add(value)
+		"sub":
+			delta = GameManager.apply_sub(value)
+		"div":
+			delta = GameManager.apply_div(value)
+		_:
+			delta = GameManager.apply_multiplier(value)
+
+	if delta > 0:
+		_spawn_clones(leader, before, delta)
+	elif delta < 0:
+		_despawn_clones(-delta)
 
 
 func _spawn_clones(leader: Node3D, previous_squad_size: int, count: int) -> void:
@@ -59,6 +84,29 @@ func _spawn_clones(leader: Node3D, previous_squad_size: int, count: int) -> void
 		get_tree().current_scene.add_child(clone)
 		var clone_index_in_squad: int = (previous_squad_size - 1) + i
 		var offset: Vector3 = GameManager.clone_offset_for_index(clone_index_in_squad)
-		clone.leader = leader
-		clone.follow_offset = offset
+		clone.set("leader", leader)
+		clone.set("follow_offset", offset)
 		clone.global_position = leader.global_position + offset
+
+
+func _despawn_clones(count: int) -> void:
+	if count <= 0:
+		return
+	var clones: Array = get_tree().get_nodes_in_group("clones")
+	# Remove the backmost clones first so the formation compacts from behind.
+	clones.sort_custom(func(a, b): return a.follow_offset.z > b.follow_offset.z)
+	var to_remove: int = min(count, clones.size())
+	for i in to_remove:
+		clones[i].queue_free()
+
+
+func _format_label(op: String, value: int) -> String:
+	match op:
+		"add":
+			return "+%d" % value
+		"sub":
+			return "-%d" % value
+		"div":
+			return "/%d" % value
+		_:
+			return "x%d" % value

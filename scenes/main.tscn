@@ -81,13 +81,17 @@ target_path = NodePath("../Soldier")
 
 [node name="Gate1" parent="." instance=ExtResource("6_gate")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -18)
-left_multiplier = 2
-right_multiplier = 3
+left_op = "mul"
+left_value = 2
+right_op = "mul"
+right_value = 3
 
 [node name="Gate2" parent="." instance=ExtResource("6_gate")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -34)
-left_multiplier = 2
-right_multiplier = 3
+left_op = "mul"
+left_value = 2
+right_op = "mul"
+right_value = 3
 
 [node name="AdvanceGroupA" type="Node3D" parent="."]
 script = ExtResource("5_spawner")

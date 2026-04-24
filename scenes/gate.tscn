@@ -23,8 +23,10 @@ emission_energy_multiplier = 0.4
 [node name="Gate" type="Node3D"]
 script = ExtResource("1_gate")
 clone_scene = ExtResource("2_clone")
-left_multiplier = 2
-right_multiplier = 3
+left_op = "mul"
+left_value = 2
+right_op = "mul"
+right_value = 3
 
 [node name="LeftHalf" type="Node3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.125, 0, 0)

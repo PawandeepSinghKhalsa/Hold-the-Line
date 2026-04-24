@@ -20,6 +20,8 @@ const BRIDGE_LENGTH := 100.0
 const CLONES_PER_ROW := 3
 const CLONE_ROW_SPACING := 1.0
 const CLONE_COL_SPACING := 0.8
+# Hard cap so a weird multiplier combo can't overflow the viewport.
+const SQUAD_CAP := 30
 
 # Supercharge tuning. Each use grants a short-lived fire-rate boost to
 # every shooter; two uses per run so it remains tactical alongside gate
@@ -84,21 +86,21 @@ func on_zombie_killed() -> void:
 
 func apply_multiplier(multiplier: int) -> int:
 	var before: int = squad_size
-	squad_size = max(1, squad_size * multiplier)
+	squad_size = clamp(squad_size * multiplier, 1, SQUAD_CAP)
 	squad_changed.emit(squad_size)
 	return squad_size - before
 
 
 func apply_add(amount: int) -> int:
 	var before: int = squad_size
-	squad_size = max(1, squad_size + amount)
+	squad_size = clamp(squad_size + amount, 1, SQUAD_CAP)
 	squad_changed.emit(squad_size)
 	return squad_size - before
 
 
 func apply_sub(amount: int) -> int:
 	var before: int = squad_size
-	squad_size = max(1, squad_size - amount)
+	squad_size = clamp(squad_size - amount, 1, SQUAD_CAP)
 	squad_changed.emit(squad_size)
 	return squad_size - before
 
@@ -107,7 +109,7 @@ func apply_div(divisor: int) -> int:
 	var before: int = squad_size
 	if divisor <= 1:
 		return 0
-	squad_size = max(1, int(squad_size / divisor))
+	squad_size = clamp(int(squad_size / divisor), 1, SQUAD_CAP)
 	squad_changed.emit(squad_size)
 	return squad_size - before
 
