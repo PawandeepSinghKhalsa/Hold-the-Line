@@ -19,6 +19,9 @@ var lane_index: int = 1
 var _target_jitter: Vector3 = Vector3.ZERO
 var _walk_speed: float = WALK_SPEED
 var _melee_range: float = MELEE_RANGE
+# Latched once the zombie's first death fires so bullets that land in the
+# same frame before queue_free resolves can't decrement the counter again.
+var _dead: bool = false
 
 
 func _ready() -> void:
@@ -116,7 +119,10 @@ func _physics_process(_delta: float) -> void:
 
 
 func take_damage(amount: int) -> void:
+	if _dead:
+		return
 	hp -= amount
 	if hp <= 0:
+		_dead = true
 		GameManager.on_zombie_killed()
 		queue_free()
