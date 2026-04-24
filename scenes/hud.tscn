@@ -37,7 +37,7 @@ text = "Distance: 0 m"
 
 [node name="HintLabel" type="Label" parent="Margin/VBox"]
 layout_mode = 2
-text = "Tap left/right to switch lanes"
+text = "Hold left/right (or A/D / arrow keys) to strafe"
 
 [node name="Banner" type="Label" parent="Margin/VBox"]
 layout_mode = 2
