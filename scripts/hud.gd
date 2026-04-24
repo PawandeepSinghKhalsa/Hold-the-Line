@@ -18,6 +18,10 @@ extends CanvasLayer
 @onready var supercharge_button: Button = $SuperchargeButton
 @onready var post_run_button: Button = $PostRunButton
 @onready var main_menu_button: Button = $MainMenuButton
+@onready var pause_button: Button = $PauseButton
+@onready var pause_overlay: Control = $PauseOverlay
+@onready var resume_button: Button = $PauseOverlay/Panel/ResumeButton
+@onready var pause_main_menu_button: Button = $PauseOverlay/Panel/PauseMainMenuButton
 @onready var damage_flash: ColorRect = $DamageFlash
 
 var _last_run_won: bool = false
@@ -35,9 +39,14 @@ func _ready() -> void:
 	supercharge_button.pressed.connect(_on_supercharge_button_pressed)
 	post_run_button.pressed.connect(_on_post_run_pressed)
 	main_menu_button.pressed.connect(_on_main_menu_pressed)
+	pause_button.pressed.connect(_on_pause_pressed)
+	resume_button.pressed.connect(_on_resume_pressed)
+	pause_main_menu_button.pressed.connect(_on_main_menu_pressed)
 	banner.visible = false
 	post_run_button.visible = false
 	main_menu_button.visible = false
+	pause_overlay.visible = false
+	get_tree().paused = false
 	_on_zombies_changed(GameManager.zombies_remaining)
 	_on_squad_changed(GameManager.squad_size)
 	_on_supercharge_changed(GameManager.supercharge)
@@ -58,6 +67,25 @@ func _ready() -> void:
 func _unhandled_input(event: InputEvent) -> void:
 	if event.is_action_pressed("supercharge"):
 		GameManager.try_trigger_supercharge()
+	elif event.is_action_pressed("pause"):
+		_toggle_pause()
+
+
+func _toggle_pause() -> void:
+	if not GameManager.is_running:
+		return
+	var now_paused: bool = not get_tree().paused
+	get_tree().paused = now_paused
+	pause_overlay.visible = now_paused
+	pause_button.visible = not now_paused
+
+
+func _on_pause_pressed() -> void:
+	_toggle_pause()
+
+
+func _on_resume_pressed() -> void:
+	_toggle_pause()
 
 
 func _process(_delta: float) -> void:
@@ -180,9 +208,12 @@ func _on_run_ended(won: bool) -> void:
 	hint_label.text = ""
 	post_run_button.visible = true
 	main_menu_button.visible = true
+	pause_button.visible = false
+	pause_overlay.visible = false
 
 
 func _on_main_menu_pressed() -> void:
+	get_tree().paused = false
 	LevelManager.go_to_title()
 
 

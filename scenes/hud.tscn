@@ -4,6 +4,7 @@
 
 [node name="HUD" type="CanvasLayer"]
 script = ExtResource("1_hud")
+process_mode = 3
 
 [node name="DamageFlash" type="ColorRect" parent="."]
 anchors_preset = 15
@@ -133,4 +134,74 @@ grow_horizontal = 2
 grow_vertical = 2
 focus_mode = 0
 visible = false
+text = "MAIN MENU"
+
+[node name="PauseButton" type="Button" parent="."]
+custom_minimum_size = Vector2(72, 72)
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -88.0
+offset_top = 16.0
+offset_right = -16.0
+offset_bottom = 88.0
+grow_horizontal = 0
+focus_mode = 0
+text = "II"
+process_mode = 3
+
+[node name="PauseOverlay" type="Control" parent="."]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+visible = false
+process_mode = 3
+
+[node name="Background" type="ColorRect" parent="PauseOverlay"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0, 0, 0, 0.7)
+mouse_filter = 0
+
+[node name="Panel" type="VBoxContainer" parent="PauseOverlay"]
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -140.0
+offset_top = -120.0
+offset_right = 140.0
+offset_bottom = 120.0
+grow_horizontal = 2
+grow_vertical = 2
+alignment = 1
+theme_override_constants/separation = 20
+
+[node name="PausedLabel" type="Label" parent="PauseOverlay/Panel"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.95, 0.4, 1)
+theme_override_font_sizes/font_size = 42
+text = "PAUSED"
+horizontal_alignment = 1
+
+[node name="ResumeButton" type="Button" parent="PauseOverlay/Panel"]
+custom_minimum_size = Vector2(240, 72)
+layout_mode = 2
+size_flags_horizontal = 4
+focus_mode = 0
+theme_override_font_sizes/font_size = 24
+text = "RESUME"
+
+[node name="PauseMainMenuButton" type="Button" parent="PauseOverlay/Panel"]
+custom_minimum_size = Vector2(240, 60)
+layout_mode = 2
+size_flags_horizontal = 4
+focus_mode = 0
+theme_override_font_sizes/font_size = 20
 text = "MAIN MENU"
