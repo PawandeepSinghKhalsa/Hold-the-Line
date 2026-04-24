@@ -4,7 +4,7 @@ extends CharacterBody3D
 # straight ahead at the same cadence as the leader. Clones do not take
 # damage from zombies — only the leader's melee contact ends the run.
 
-const FIRE_INTERVAL := 0.5
+const FIRE_INTERVAL := 0.33
 const BULLET_SPAWN_OFFSET := Vector3(0, 0.9, -0.3)
 const FOLLOW_LERP_SPEED := 12.0
 
