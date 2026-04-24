@@ -119,6 +119,7 @@ func _on_run_ended(won: bool) -> void:
 	if won:
 		banner.text = "VICTORY — %d kills" % kills
 		banner.modulate = Color(0.4, 1, 0.5, 1)
+		Effects.spawn_victory_celebration()
 		if LevelManager.has_next():
 			post_run_button.text = "NEXT LEVEL"
 		else:
