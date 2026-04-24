@@ -15,6 +15,10 @@ const SPEED := 25.0
 const DEFAULT_DAMAGE := 1
 const BASE_LIFETIME := 3.0
 const HIT_RADIUS := 0.55
+# Safety valve: if the scene is flooded with bullets (flamethrower +
+# supercharge stacks can push this to 500+), despawn the oldest ones
+# on spawn so the renderer never collapses under node pressure.
+const MAX_ACTIVE_BULLETS := 140
 
 var _age: float = 0.0
 var _pierced: Dictionary = {}
@@ -33,6 +37,29 @@ var _pierced: Dictionary = {}
 # other zombie within chain_range. chain_count decrements per chain.
 @export var chain_count: int = 0
 @export var chain_range: float = 0.0
+
+
+func _ready() -> void:
+	add_to_group("bullets")
+	_enforce_bullet_cap()
+
+
+func _enforce_bullet_cap() -> void:
+	# Each bullet joins a "bullets" group on ready. If the group exceeds
+	# MAX_ACTIVE_BULLETS, free the oldest entries so flamethrower spam
+	# can't crash the renderer.
+	var tree: SceneTree = get_tree()
+	if tree == null:
+		return
+	var bullets: Array = tree.get_nodes_in_group("bullets")
+	if bullets.size() <= MAX_ACTIVE_BULLETS:
+		return
+	var to_cull: int = bullets.size() - MAX_ACTIVE_BULLETS
+	for i in to_cull:
+		var old: Node = bullets[i]
+		if old == self or old == null or not is_instance_valid(old):
+			continue
+		old.queue_free()
 
 
 func _physics_process(delta: float) -> void:

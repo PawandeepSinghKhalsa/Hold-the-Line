@@ -104,9 +104,9 @@ const WEAPON_TIERS: Dictionary = {
 		{"damage": 4, "chain_count": 4, "chain_range": 6.0, "upgrade_cost": 1800},
 	],
 	WEAPON_FLAME: [
-		{"pellets": 7, "damage": 1, "fire_mult": 0.20, "upgrade_cost": 0},
-		{"pellets": 9, "damage": 1, "fire_mult": 0.17, "upgrade_cost": 800},
-		{"pellets": 11, "damage": 2, "fire_mult": 0.14, "upgrade_cost": 2000},
+		{"pellets": 7, "damage": 1, "fire_mult": 0.28, "upgrade_cost": 0},
+		{"pellets": 9, "damage": 1, "fire_mult": 0.24, "upgrade_cost": 800},
+		{"pellets": 11, "damage": 2, "fire_mult": 0.20, "upgrade_cost": 2000},
 	],
 	WEAPON_RAILGUN: [
 		{"damage": 15, "fire_mult": 4.0, "lifetime_mult": 2.0, "upgrade_cost": 0},
@@ -290,6 +290,11 @@ func weapon_time_left() -> float:
 	return _weapon_time_left
 
 
+# Minimum fire interval after all multipliers. Prevents flame / MG +
+# supercharge + fire-rate upgrades from spawning thousands of bullets
+# per second (which overwhelms the renderer and blacks the viewport).
+const MIN_FIRE_INTERVAL := 0.07
+
 # Per-weapon fire interval, already scaled by the supercharge multiplier.
 func current_fire_interval(base_interval: float) -> float:
 	var interval: float = base_interval
@@ -303,7 +308,7 @@ func current_fire_interval(base_interval: float) -> float:
 		_:
 			interval = base_interval
 	var total_mult: float = fire_rate_multiplier() * LevelManager.effective_fire_rate_multiplier()
-	return interval / total_mult
+	return max(interval / total_mult, MIN_FIRE_INTERVAL)
 
 
 # Read a single stat for the given weapon using the player's current
