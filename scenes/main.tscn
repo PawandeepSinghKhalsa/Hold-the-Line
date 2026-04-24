@@ -6,6 +6,7 @@
 [ext_resource type="PackedScene" path="res://scenes/zombie.tscn" id="4_zombie"]
 [ext_resource type="Script" path="res://scripts/horde_spawner.gd" id="5_spawner"]
 [ext_resource type="PackedScene" path="res://scenes/gate.tscn" id="6_gate"]
+[ext_resource type="Script" path="res://scripts/boss_spawner.gd" id="7_boss"]
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_bridge"]
 size = Vector3(4.5, 0.4, 160)
@@ -110,5 +111,12 @@ row_spacing = 1.0
 horde_front_z = -105.0
 tough_rows_from_back = 40
 tough_hp = 2
+
+[node name="BossSpawner" type="Node3D" parent="."]
+script = ExtResource("7_boss")
+zombie_scene = ExtResource("4_zombie")
+boss_hp = 50
+boss_z = -148.0
+boss_lane = 1
 
 [node name="HUD" parent="." instance=ExtResource("2_hud")]
