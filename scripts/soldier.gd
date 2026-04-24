@@ -6,7 +6,7 @@ extends CharacterBody3D
 
 signal lane_changed(new_lane: int)
 
-const LANE_LERP_SPEED := 12.0
+const LANE_LERP_SPEED := 20.0
 const FIRE_INTERVAL := 0.5
 const BULLET_SPAWN_OFFSET := Vector3(0, 0.9, -0.5)
 
