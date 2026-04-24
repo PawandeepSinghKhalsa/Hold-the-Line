@@ -73,6 +73,11 @@ const WEAPON_UNLOCK_COSTS: Dictionary = {
 #   rocket: damage, radius, aoe_damage
 # Every entry carries upgrade_cost (0 for the free tier).
 const WEAPON_TIERS: Dictionary = {
+	# Pistol has no upgrade path — single tier so it still renders in
+	# the Arsenal as an equippable option alongside the rest.
+	WEAPON_DEFAULT: [
+		{"damage": 1, "upgrade_cost": 0},
+	],
 	WEAPON_SHOTGUN: [
 		{"pellets": 3, "damage": 1, "upgrade_cost": 0},
 		{"pellets": 4, "damage": 1, "upgrade_cost": 300},
@@ -131,10 +136,12 @@ func _process(delta: float) -> void:
 	if _boost_time_left > 0.0:
 		_boost_time_left = max(0.0, _boost_time_left - delta)
 		supercharge_boost_changed.emit(_boost_time_left > 0.0, _boost_time_left)
-	if active_weapon != WEAPON_DEFAULT and _weapon_time_left > 0.0:
+	if _weapon_time_left > 0.0:
 		_weapon_time_left = max(0.0, _weapon_time_left - delta)
 		if _weapon_time_left <= 0.0:
-			active_weapon = WEAPON_DEFAULT
+			# Crate override ran out — revert to the player's equipped
+			# weapon, not the pistol.
+			active_weapon = LevelManager.selected_weapon
 		weapon_changed.emit(active_weapon, _weapon_time_left)
 
 
@@ -148,7 +155,9 @@ func reset() -> void:
 	squad_size = 1
 	supercharge = 0.0
 	supercharge_uses_remaining = SUPERCHARGE_USES_PER_RUN
-	active_weapon = WEAPON_DEFAULT
+	# Start the run holding whatever weapon the player equipped in the
+	# Arsenal. Default is WEAPON_DEFAULT (pistol).
+	active_weapon = LevelManager.selected_weapon
 	_weapon_time_left = 0.0
 	_boost_time_left = 0.0
 	zombies_remaining_changed.emit(zombies_remaining)

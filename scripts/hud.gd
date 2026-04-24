@@ -180,12 +180,14 @@ func _on_supercharge_button_pressed() -> void:
 
 func _on_weapon_changed(weapon_id: int, time_left: float) -> void:
 	var weapon_name: String = GameManager.WEAPON_NAMES.get(weapon_id, "Pistol")
-	if weapon_id == GameManager.WEAPON_DEFAULT or time_left <= 0.0:
-		weapon_label.text = "Weapon: Pistol"
-		weapon_label.modulate = Color(1, 1, 1, 1)
-	else:
+	if time_left > 0.0:
+		# Crate override — show live countdown in yellow.
 		weapon_label.text = "Weapon: %s (%.1fs)" % [weapon_name, time_left]
 		weapon_label.modulate = Color(1, 0.95, 0.4, 1)
+	else:
+		# Equipped weapon — show name without timer.
+		weapon_label.text = "Weapon: %s" % weapon_name
+		weapon_label.modulate = Color(1, 1, 1, 1)
 
 
 func _on_run_ended(won: bool) -> void:

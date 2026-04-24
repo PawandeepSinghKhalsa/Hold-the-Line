@@ -11,6 +11,7 @@ extends Control
 
 const CARD_BG_COLOR := Color(0.13, 0.11, 0.17, 1.0)
 const CARD_COLORS: Dictionary = {
+	0: Color(0.7, 0.7, 0.75),    # WEAPON_DEFAULT (pistol)
 	1: Color(1.0, 0.55, 0.2),    # WEAPON_SHOTGUN
 	2: Color(0.3, 0.65, 1.0),    # WEAPON_MACHINE_GUN
 	3: Color(0.35, 0.95, 0.5),   # WEAPON_SNIPER
@@ -19,7 +20,7 @@ const CARD_COLORS: Dictionary = {
 	6: Color(1.0, 0.4, 0.1),     # WEAPON_FLAME
 	7: Color(0.9, 0.9, 0.95),    # WEAPON_RAILGUN
 }
-const WEAPON_DISPLAY_ORDER: Array = [1, 2, 3, 4, 5, 6, 7]
+const WEAPON_DISPLAY_ORDER: Array = [0, 1, 2, 3, 4, 5, 6, 7]
 
 
 func _ready() -> void:
@@ -27,6 +28,7 @@ func _ready() -> void:
 	LevelManager.banked_kills_changed.connect(_on_banked_changed)
 	LevelManager.weapon_tier_changed.connect(_on_tier_changed)
 	LevelManager.weapon_unlocked.connect(_on_weapon_unlocked)
+	LevelManager.selected_weapon_changed.connect(_on_selected_changed)
 	_rebuild()
 
 
@@ -46,6 +48,7 @@ func _make_card(weapon_id: int) -> Control:
 	var max_tier_index: int = tiers.size() - 1
 	var current_tier: int = LevelManager.get_weapon_tier(weapon_id)
 	var is_locked: bool = not LevelManager.is_weapon_unlocked(weapon_id)
+	var is_equipped: bool = LevelManager.selected_weapon == weapon_id
 
 	var card: PanelContainer = PanelContainer.new()
 	card.custom_minimum_size = Vector2(520, 200)
@@ -85,6 +88,9 @@ func _make_card(weapon_id: int) -> Control:
 	if is_locked:
 		right_label.text = "LOCKED"
 		right_label.add_theme_color_override("font_color", Color(0.7, 0.55, 0.55, 1))
+	elif is_equipped:
+		right_label.text = "EQUIPPED"
+		right_label.add_theme_color_override("font_color", Color(0.5, 1, 0.6))
 	else:
 		right_label.text = "Tier %d / %d" % [current_tier + 1, max_tier_index + 1]
 		right_label.add_theme_color_override("font_color", tint)
@@ -123,6 +129,8 @@ func _make_card(weapon_id: int) -> Control:
 	action_button.add_theme_font_size_override("font_size", 24)
 	bottom.add_child(action_button)
 
+	# Upgrade / unlock button on the right, EQUIP button stacked below
+	# when the weapon is unlocked and not already equipped.
 	if is_locked:
 		var unlock_cost: int = LevelManager.weapon_unlock_cost(weapon_id)
 		cost_label.text = "Unlock: %d kills" % unlock_cost
@@ -147,6 +155,35 @@ func _make_card(weapon_id: int) -> Control:
 			action_button.disabled = not can_afford
 			_apply_button_style(action_button, tint, can_afford)
 		action_button.pressed.connect(_on_upgrade_pressed.bind(weapon_id))
+
+	# EQUIP row — only shown when the weapon is owned.
+	if not is_locked:
+		var equip_row: HBoxContainer = HBoxContainer.new()
+		equip_row.add_theme_constant_override("separation", 16)
+		vbox.add_child(equip_row)
+		var equip_spacer: Control = Control.new()
+		equip_spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		equip_row.add_child(equip_spacer)
+		var equip_button: Button = Button.new()
+		equip_button.custom_minimum_size = Vector2(200, 52)
+		equip_button.focus_mode = Control.FOCUS_NONE
+		equip_button.add_theme_font_size_override("font_size", 20)
+		if is_equipped:
+			equip_button.text = "EQUIPPED ✓"
+			equip_button.disabled = true
+			var eq_style: StyleBoxFlat = StyleBoxFlat.new()
+			eq_style.bg_color = Color(0.25, 0.55, 0.3, 1)
+			eq_style.corner_radius_top_left = 10
+			eq_style.corner_radius_top_right = 10
+			eq_style.corner_radius_bottom_left = 10
+			eq_style.corner_radius_bottom_right = 10
+			equip_button.add_theme_stylebox_override("disabled", eq_style)
+			equip_button.add_theme_color_override("font_color_disabled", Color(1, 1, 1, 1))
+		else:
+			equip_button.text = "EQUIP"
+			_apply_button_style(equip_button, Color(0.45, 0.75, 0.5), true)
+			equip_button.pressed.connect(_on_equip_pressed.bind(weapon_id))
+		equip_row.add_child(equip_button)
 	return card
 
 
@@ -196,6 +233,8 @@ func _stat_summary(weapon_id: int, tier_index: int) -> String:
 	var tiers: Array = GameManager.WEAPON_TIERS[weapon_id]
 	var tier: Dictionary = tiers[tier_index]
 	match weapon_id:
+		GameManager.WEAPON_DEFAULT:
+			return "Standard issue — always available"
 		GameManager.WEAPON_SHOTGUN:
 			return "%d pellets, %d damage each" % [int(tier.get("pellets", 3)), int(tier.get("damage", 1))]
 		GameManager.WEAPON_MACHINE_GUN:
@@ -236,6 +275,14 @@ func _on_unlock_pressed(weapon_id: int) -> void:
 
 
 func _on_weapon_unlocked(_id: int) -> void:
+	_rebuild()
+
+
+func _on_equip_pressed(weapon_id: int) -> void:
+	LevelManager.set_selected_weapon(weapon_id)
+
+
+func _on_selected_changed(_id: int) -> void:
 	_rebuild()
 
 

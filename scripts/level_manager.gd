@@ -11,6 +11,7 @@ signal banked_kills_changed(kills: int)
 signal upgrade_purchased(upgrade_key: String, new_level: int)
 signal weapon_tier_changed(weapon_id: int, tier_index: int)
 signal weapon_unlocked(weapon_id: int)
+signal selected_weapon_changed(weapon_id: int)
 
 const PROGRESS_PATH := "user://progress.cfg"
 
@@ -68,6 +69,11 @@ var weapon_tiers: Dictionary = {}
 # / Rocket) default to true. Weapons listed in GameManager.WEAPON_UNLOCK_
 # COSTS default to false and are bought via unlock_weapon.
 var unlocked_weapons: Dictionary = {}
+
+# Weapon the player has equipped as the starting / base weapon for every
+# run. When a crate pickup expires, GameManager reverts to this instead
+# of the pistol. Default is GameManager.WEAPON_DEFAULT (the pistol).
+var selected_weapon: int = 0
 
 
 func _ready() -> void:
@@ -262,6 +268,20 @@ func unlock_weapon(weapon_id: int) -> bool:
 	return true
 
 
+func set_selected_weapon(weapon_id: int) -> bool:
+	# Pistol (WEAPON_DEFAULT) is always equippable; anything else must
+	# be unlocked first so the player can't equip a weapon they don't
+	# own yet.
+	if weapon_id != GameManager.WEAPON_DEFAULT and not is_weapon_unlocked(weapon_id):
+		return false
+	if weapon_id == selected_weapon:
+		return false
+	selected_weapon = weapon_id
+	selected_weapon_changed.emit(selected_weapon)
+	_save_progress()
+	return true
+
+
 func _load_progress() -> void:
 	var cfg: ConfigFile = ConfigFile.new()
 	if cfg.load(PROGRESS_PATH) != OK:
@@ -275,6 +295,7 @@ func _load_progress() -> void:
 		weapon_tiers[weapon_id] = int(cfg.get_value("arsenal", "tier_%d" % int(weapon_id), 0))
 		var default_unlocked: bool = not GameManager.WEAPON_UNLOCK_COSTS.has(weapon_id)
 		unlocked_weapons[weapon_id] = bool(cfg.get_value("arsenal", "unlocked_%d" % int(weapon_id), default_unlocked))
+	selected_weapon = int(cfg.get_value("arsenal", "selected_weapon", GameManager.WEAPON_DEFAULT))
 
 
 func _save_progress() -> void:
@@ -288,4 +309,5 @@ func _save_progress() -> void:
 		cfg.set_value("arsenal", "tier_%d" % int(weapon_id), int(weapon_tiers[weapon_id]))
 	for weapon_id in unlocked_weapons.keys():
 		cfg.set_value("arsenal", "unlocked_%d" % int(weapon_id), bool(unlocked_weapons[weapon_id]))
+	cfg.set_value("arsenal", "selected_weapon", selected_weapon)
 	cfg.save(PROGRESS_PATH)
