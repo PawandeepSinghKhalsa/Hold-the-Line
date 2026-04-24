@@ -15,11 +15,12 @@ const STRAFE_SPEED := 1.2
 const BRIDGE_HALF_WIDTH := 2.1
 const FIRE_INTERVAL := 0.33
 const BULLET_SPAWN_OFFSET := Vector3(0, 0.9, -0.5)
-const MAX_HP := 100
+const BASE_MAX_HP := 100
 
 @export var bullet_scene: PackedScene
 
-var hp: int = MAX_HP
+var max_hp: int = BASE_MAX_HP
+var hp: int = BASE_MAX_HP
 var _fire_cooldown: float = 0.0
 var _touch_down: bool = false
 var _last_reported_lane: int = -1
@@ -28,8 +29,9 @@ var _last_reported_lane: int = -1
 func _ready() -> void:
 	GameManager.reset()
 	add_to_group("soldier")
-	hp = MAX_HP
-	hp_changed.emit(hp, MAX_HP)
+	max_hp = LevelManager.effective_max_hp(BASE_MAX_HP)
+	hp = max_hp
+	hp_changed.emit(hp, max_hp)
 	_emit_lane_for_current_x()
 
 
@@ -138,13 +140,13 @@ func _emit_lane_for_current_x() -> void:
 func take_melee_hit() -> void:
 	# Legacy method name — zombies now call take_damage for DPS, but keep
 	# this as an alias so the Phase-2 insta-kill callers still work.
-	take_damage(MAX_HP)
+	take_damage(max_hp)
 
 
 func take_damage(amount: int) -> void:
 	if not GameManager.is_running or hp <= 0:
 		return
 	hp = max(0, hp - amount)
-	hp_changed.emit(hp, MAX_HP)
+	hp_changed.emit(hp, max_hp)
 	if hp <= 0:
 		GameManager.end_run(false)

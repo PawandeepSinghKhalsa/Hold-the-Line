@@ -64,7 +64,7 @@ func _ready() -> void:
 			_on_lane_changed(soldier_node.lane_index)
 		if soldier_node.has_signal("hp_changed"):
 			soldier_node.hp_changed.connect(_on_leader_hp_changed)
-			_on_leader_hp_changed(soldier_node.hp, soldier_node.MAX_HP)
+			_on_leader_hp_changed(soldier_node.hp, soldier_node.max_hp)
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -196,8 +196,11 @@ func _on_run_ended(won: bool) -> void:
 	var kills: int = GameManager.kills_this_run
 	var new_record: bool = LevelManager.record_kills(LevelManager.current_level, kills)
 	var record_suffix: String = "  ★ NEW RECORD" if new_record else ""
+	# Every run banks its kills toward the Store — win or lose.
+	LevelManager.add_banked_kills(kills)
+	var banked_suffix: String = "  (+%d banked)" % kills if kills > 0 else ""
 	if won:
-		banner.text = "VICTORY — %d kills%s" % [kills, record_suffix]
+		banner.text = "VICTORY — %d kills%s%s" % [kills, record_suffix, banked_suffix]
 		banner.modulate = Color(0.4, 1, 0.5, 1)
 		Effects.spawn_victory_celebration()
 		if LevelManager.has_next():
@@ -205,7 +208,7 @@ func _on_run_ended(won: bool) -> void:
 		else:
 			post_run_button.text = "YOU BEAT THE GAME — play again"
 	else:
-		banner.text = "GAME OVER — %d kills%s" % [kills, record_suffix]
+		banner.text = "GAME OVER — %d kills%s%s" % [kills, record_suffix, banked_suffix]
 		banner.modulate = Color(1, 0.4, 0.4, 1)
 		post_run_button.text = "RETRY"
 	hint_label.text = ""

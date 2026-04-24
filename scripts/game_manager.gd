@@ -211,7 +211,7 @@ func activate_weapon(weapon_id: int) -> void:
 	if weapon_id == WEAPON_DEFAULT:
 		return
 	active_weapon = weapon_id
-	_weapon_time_left = WEAPON_PICKUP_DURATION
+	_weapon_time_left = LevelManager.effective_weapon_duration(WEAPON_PICKUP_DURATION)
 	weapon_changed.emit(active_weapon, _weapon_time_left)
 
 
@@ -231,7 +231,8 @@ func current_fire_interval(base_interval: float) -> float:
 			interval = base_interval * 3.0  # slowest, but blasts a crowd
 		_:
 			interval = base_interval
-	return interval / fire_rate_multiplier()
+	var total_mult: float = fire_rate_multiplier() * LevelManager.effective_fire_rate_multiplier()
+	return interval / total_mult
 
 
 func end_run(won: bool) -> void:
