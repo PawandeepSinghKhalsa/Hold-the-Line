@@ -39,6 +39,9 @@ const WEAPON_SHOTGUN := 1
 const WEAPON_MACHINE_GUN := 2
 const WEAPON_SNIPER := 3
 const WEAPON_ROCKET := 4
+const WEAPON_LIGHTNING := 5
+const WEAPON_FLAME := 6
+const WEAPON_RAILGUN := 7
 const WEAPON_PICKUP_DURATION := 8.0
 const WEAPON_NAMES: Dictionary = {
 	WEAPON_DEFAULT: "Pistol",
@@ -46,6 +49,17 @@ const WEAPON_NAMES: Dictionary = {
 	WEAPON_MACHINE_GUN: "Machine Gun",
 	WEAPON_SNIPER: "Sniper",
 	WEAPON_ROCKET: "Rocket",
+	WEAPON_LIGHTNING: "Lightning Gun",
+	WEAPON_FLAME: "Flamethrower",
+	WEAPON_RAILGUN: "Rail Gun",
+}
+# Locked weapons must be unlocked via the Arsenal before the weapon
+# spawner rolls them into crates. Unlock is a one-time cost in banked
+# kills; upgrade tiers then work the same way as the default weapons.
+const WEAPON_UNLOCK_COSTS: Dictionary = {
+	WEAPON_LIGHTNING: 1500,
+	WEAPON_FLAME: 2000,
+	WEAPON_RAILGUN: 3000,
 }
 
 # Per-weapon tier stats. Each weapon has an array of tier dicts indexed
@@ -78,6 +92,21 @@ const WEAPON_TIERS: Dictionary = {
 		{"damage": 4, "radius": 3.5, "aoe_damage": 4, "upgrade_cost": 0},
 		{"damage": 5, "radius": 4.5, "aoe_damage": 5, "upgrade_cost": 600},
 		{"damage": 6, "radius": 5.5, "aoe_damage": 6, "upgrade_cost": 1500},
+	],
+	WEAPON_LIGHTNING: [
+		{"damage": 2, "chain_count": 2, "chain_range": 4.0, "upgrade_cost": 0},
+		{"damage": 3, "chain_count": 3, "chain_range": 5.0, "upgrade_cost": 700},
+		{"damage": 4, "chain_count": 4, "chain_range": 6.0, "upgrade_cost": 1800},
+	],
+	WEAPON_FLAME: [
+		{"pellets": 7, "damage": 1, "fire_mult": 0.20, "upgrade_cost": 0},
+		{"pellets": 9, "damage": 1, "fire_mult": 0.17, "upgrade_cost": 800},
+		{"pellets": 11, "damage": 2, "fire_mult": 0.14, "upgrade_cost": 2000},
+	],
+	WEAPON_RAILGUN: [
+		{"damage": 15, "fire_mult": 4.0, "lifetime_mult": 2.0, "upgrade_cost": 0},
+		{"damage": 20, "fire_mult": 3.5, "lifetime_mult": 2.5, "upgrade_cost": 1200},
+		{"damage": 30, "fire_mult": 3.0, "lifetime_mult": 3.0, "upgrade_cost": 2500},
 	],
 }
 
@@ -256,8 +285,8 @@ func weapon_time_left() -> float:
 func current_fire_interval(base_interval: float) -> float:
 	var interval: float = base_interval
 	match active_weapon:
-		WEAPON_MACHINE_GUN:
-			interval = base_interval * weapon_stat(WEAPON_MACHINE_GUN, "fire_mult", 0.4)
+		WEAPON_MACHINE_GUN, WEAPON_FLAME, WEAPON_RAILGUN:
+			interval = base_interval * float(weapon_stat(active_weapon, "fire_mult", 1.0))
 		WEAPON_SNIPER:
 			interval = base_interval * 2.2  # slow but devastating
 		WEAPON_ROCKET:

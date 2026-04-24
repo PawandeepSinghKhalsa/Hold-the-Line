@@ -96,6 +96,12 @@ func _fire_for_active_weapon(spawn_pos: Vector3) -> void:
 			_fire_sniper(spawn_pos)
 		GameManager.WEAPON_ROCKET:
 			_fire_rocket(spawn_pos)
+		GameManager.WEAPON_LIGHTNING:
+			_fire_lightning(spawn_pos)
+		GameManager.WEAPON_FLAME:
+			_fire_flame(spawn_pos)
+		GameManager.WEAPON_RAILGUN:
+			_fire_railgun(spawn_pos)
 		GameManager.WEAPON_MACHINE_GUN:
 			var dmg: int = int(GameManager.weapon_stat(GameManager.WEAPON_MACHINE_GUN, "damage", 1))
 			_spawn_bullet(spawn_pos, Vector3(0.0, 0, -1.0), dmg, false)
@@ -135,6 +141,37 @@ func _fire_rocket(spawn_pos: Vector3) -> void:
 	bullet.set("explosion_damage", aoe)
 	get_tree().current_scene.add_child(bullet)
 	bullet.global_position = spawn_pos
+
+
+func _fire_lightning(spawn_pos: Vector3) -> void:
+	var bullet: Node3D = bullet_scene.instantiate() as Node3D
+	if bullet == null:
+		return
+	bullet.set("direction", Vector3(0.0, 0, -1.0))
+	bullet.set("damage_override", int(GameManager.weapon_stat(GameManager.WEAPON_LIGHTNING, "damage", 2)))
+	bullet.set("pierce_all", false)
+	bullet.set("chain_count", int(GameManager.weapon_stat(GameManager.WEAPON_LIGHTNING, "chain_count", 2)))
+	bullet.set("chain_range", float(GameManager.weapon_stat(GameManager.WEAPON_LIGHTNING, "chain_range", 4.0)))
+	get_tree().current_scene.add_child(bullet)
+	bullet.global_position = spawn_pos
+
+
+func _fire_flame(spawn_pos: Vector3) -> void:
+	var pellets: int = int(GameManager.weapon_stat(GameManager.WEAPON_FLAME, "pellets", 7))
+	var damage: int = int(GameManager.weapon_stat(GameManager.WEAPON_FLAME, "damage", 1))
+	pellets = max(pellets, 1)
+	var spread: float = 0.45
+	for i in pellets:
+		var t: float = 0.5 if pellets <= 1 else float(i) / float(pellets - 1)
+		var x: float = lerp(-spread, spread, t)
+		var dir: Vector3 = Vector3(x, 0, -1).normalized()
+		_spawn_bullet(spawn_pos, dir, damage, false, 0.25)
+
+
+func _fire_railgun(spawn_pos: Vector3) -> void:
+	var damage: int = int(GameManager.weapon_stat(GameManager.WEAPON_RAILGUN, "damage", 15))
+	var life: float = float(GameManager.weapon_stat(GameManager.WEAPON_RAILGUN, "lifetime_mult", 2.0))
+	_spawn_bullet(spawn_pos, Vector3(0.0, 0, -1.0), damage, true, life)
 
 
 func _spawn_bullet(spawn_pos: Vector3, direction: Vector3, damage: int, pierce_all: bool, lifetime_mult: float = 1.0) -> void:

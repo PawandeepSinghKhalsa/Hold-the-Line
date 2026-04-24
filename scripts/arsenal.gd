@@ -15,14 +15,18 @@ const CARD_COLORS: Dictionary = {
 	2: Color(0.3, 0.65, 1.0),    # WEAPON_MACHINE_GUN
 	3: Color(0.35, 0.95, 0.5),   # WEAPON_SNIPER
 	4: Color(0.95, 0.2, 0.25),   # WEAPON_ROCKET
+	5: Color(0.35, 0.8, 1.0),    # WEAPON_LIGHTNING
+	6: Color(1.0, 0.4, 0.1),     # WEAPON_FLAME
+	7: Color(0.9, 0.9, 0.95),    # WEAPON_RAILGUN
 }
-const WEAPON_DISPLAY_ORDER: Array = [1, 2, 3, 4]
+const WEAPON_DISPLAY_ORDER: Array = [1, 2, 3, 4, 5, 6, 7]
 
 
 func _ready() -> void:
 	back_button.pressed.connect(_on_back_pressed)
 	LevelManager.banked_kills_changed.connect(_on_banked_changed)
 	LevelManager.weapon_tier_changed.connect(_on_tier_changed)
+	LevelManager.weapon_unlocked.connect(_on_weapon_unlocked)
 	_rebuild()
 
 
@@ -41,15 +45,16 @@ func _make_card(weapon_id: int) -> Control:
 	var tiers: Array = GameManager.WEAPON_TIERS[weapon_id]
 	var max_tier_index: int = tiers.size() - 1
 	var current_tier: int = LevelManager.get_weapon_tier(weapon_id)
+	var is_locked: bool = not LevelManager.is_weapon_unlocked(weapon_id)
 
 	var card: PanelContainer = PanelContainer.new()
 	card.custom_minimum_size = Vector2(520, 200)
 	card.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 
 	var style: StyleBoxFlat = StyleBoxFlat.new()
-	style.bg_color = CARD_BG_COLOR
+	style.bg_color = CARD_BG_COLOR if not is_locked else Color(0.1, 0.09, 0.12, 1)
 	style.border_width_left = 12
-	style.border_color = tint
+	style.border_color = tint if not is_locked else Color(0.35, 0.32, 0.38, 1)
 	style.corner_radius_top_left = 16
 	style.corner_radius_top_right = 16
 	style.corner_radius_bottom_left = 16
@@ -64,7 +69,7 @@ func _make_card(weapon_id: int) -> Control:
 	vbox.add_theme_constant_override("separation", 8)
 	card.add_child(vbox)
 
-	# Top row: name + tier label + pips
+	# Top row: name + tier/lock label
 	var top: HBoxContainer = HBoxContainer.new()
 	top.add_theme_constant_override("separation", 14)
 	vbox.add_child(top)
@@ -72,31 +77,36 @@ func _make_card(weapon_id: int) -> Control:
 	var name_label: Label = Label.new()
 	name_label.text = GameManager.WEAPON_NAMES.get(weapon_id, "?")
 	name_label.add_theme_font_size_override("font_size", 32)
-	name_label.add_theme_color_override("font_color", Color(1, 1, 1))
+	name_label.add_theme_color_override("font_color", Color(1, 1, 1) if not is_locked else Color(0.6, 0.6, 0.65, 1))
 	name_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	top.add_child(name_label)
 
-	var tier_label: Label = Label.new()
-	tier_label.text = "Tier %d / %d" % [current_tier + 1, max_tier_index + 1]
-	tier_label.add_theme_font_size_override("font_size", 22)
-	tier_label.add_theme_color_override("font_color", tint)
-	top.add_child(tier_label)
+	var right_label: Label = Label.new()
+	if is_locked:
+		right_label.text = "LOCKED"
+		right_label.add_theme_color_override("font_color", Color(0.7, 0.55, 0.55, 1))
+	else:
+		right_label.text = "Tier %d / %d" % [current_tier + 1, max_tier_index + 1]
+		right_label.add_theme_color_override("font_color", tint)
+	right_label.add_theme_font_size_override("font_size", 22)
+	top.add_child(right_label)
 
-	# Pips row (built from coloured circles, not Unicode)
-	vbox.add_child(_make_pips_node(current_tier, max_tier_index + 1, tint))
+	# Pips row
+	if not is_locked:
+		vbox.add_child(_make_pips_node(current_tier, max_tier_index + 1, tint))
 
-	# Stat summary for current tier
+	# Stat summary
 	var stat_label: Label = Label.new()
-	stat_label.text = _stat_summary(weapon_id, current_tier)
+	stat_label.text = _stat_summary(weapon_id, current_tier) if not is_locked else _lock_summary(weapon_id)
 	stat_label.add_theme_font_size_override("font_size", 18)
-	stat_label.modulate = Color(0.85, 0.85, 0.9, 1)
+	stat_label.modulate = Color(0.85, 0.85, 0.9, 1) if not is_locked else Color(0.7, 0.65, 0.72, 1)
 	vbox.add_child(stat_label)
 
 	var spacer: Control = Control.new()
 	spacer.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	vbox.add_child(spacer)
 
-	# Bottom row: next-tier cost + UPGRADE button
+	# Bottom row: cost + action button (UNLOCK / UPGRADE / MAXED)
 	var bottom: HBoxContainer = HBoxContainer.new()
 	bottom.add_theme_constant_override("separation", 16)
 	vbox.add_child(bottom)
@@ -107,28 +117,36 @@ func _make_card(weapon_id: int) -> Control:
 	cost_label.add_theme_font_size_override("font_size", 24)
 	bottom.add_child(cost_label)
 
-	var buy_button: Button = Button.new()
-	buy_button.custom_minimum_size = Vector2(200, 68)
-	buy_button.focus_mode = Control.FOCUS_NONE
-	buy_button.add_theme_font_size_override("font_size", 24)
-	bottom.add_child(buy_button)
+	var action_button: Button = Button.new()
+	action_button.custom_minimum_size = Vector2(200, 68)
+	action_button.focus_mode = Control.FOCUS_NONE
+	action_button.add_theme_font_size_override("font_size", 24)
+	bottom.add_child(action_button)
 
-	var cost: int = LevelManager.weapon_next_upgrade_cost(weapon_id)
-	if cost < 0:
-		cost_label.text = "MAX TIER"
-		cost_label.add_theme_color_override("font_color", Color(0.5, 1, 0.6))
-		buy_button.text = "MAXED"
-		buy_button.disabled = true
+	if is_locked:
+		var unlock_cost: int = LevelManager.weapon_unlock_cost(weapon_id)
+		cost_label.text = "Unlock: %d kills" % unlock_cost
+		var can_afford: bool = LevelManager.banked_kills >= unlock_cost
+		cost_label.add_theme_color_override("font_color", Color(1, 0.95, 0.4) if can_afford else Color(0.9, 0.55, 0.55))
+		action_button.text = "UNLOCK"
+		action_button.disabled = not can_afford
+		_apply_button_style(action_button, tint, can_afford)
+		action_button.pressed.connect(_on_unlock_pressed.bind(weapon_id))
 	else:
-		cost_label.text = "Upgrade: %d kills" % cost
-		var can_afford: bool = LevelManager.banked_kills >= cost
-		var cost_color: Color = Color(1, 0.95, 0.4) if can_afford else Color(0.9, 0.55, 0.55)
-		cost_label.add_theme_color_override("font_color", cost_color)
-		buy_button.text = "UPGRADE"
-		buy_button.disabled = not can_afford
-		_apply_button_style(buy_button, tint, can_afford)
-
-	buy_button.pressed.connect(_on_upgrade_pressed.bind(weapon_id))
+		var cost: int = LevelManager.weapon_next_upgrade_cost(weapon_id)
+		if cost < 0:
+			cost_label.text = "MAX TIER"
+			cost_label.add_theme_color_override("font_color", Color(0.5, 1, 0.6))
+			action_button.text = "MAXED"
+			action_button.disabled = true
+		else:
+			cost_label.text = "Upgrade: %d kills" % cost
+			var can_afford: bool = LevelManager.banked_kills >= cost
+			cost_label.add_theme_color_override("font_color", Color(1, 0.95, 0.4) if can_afford else Color(0.9, 0.55, 0.55))
+			action_button.text = "UPGRADE"
+			action_button.disabled = not can_afford
+			_apply_button_style(action_button, tint, can_afford)
+		action_button.pressed.connect(_on_upgrade_pressed.bind(weapon_id))
 	return card
 
 
@@ -188,11 +206,37 @@ func _stat_summary(weapon_id: int, tier_index: int) -> String:
 			return "%d damage, pierces all, range %.1fx" % [int(tier.get("damage", 5)), life]
 		GameManager.WEAPON_ROCKET:
 			return "%d direct / %d AOE, radius %.1f" % [int(tier.get("damage", 4)), int(tier.get("aoe_damage", 4)), float(tier.get("radius", 3.5))]
+		GameManager.WEAPON_LIGHTNING:
+			return "%d damage, chains %d times within %.1fu" % [int(tier.get("damage", 2)), int(tier.get("chain_count", 2)), float(tier.get("chain_range", 4.0))]
+		GameManager.WEAPON_FLAME:
+			var fr: float = 1.0 / max(float(tier.get("fire_mult", 0.2)), 0.01)
+			return "%d pellets cone, %d damage, %.1fx fire rate" % [int(tier.get("pellets", 7)), int(tier.get("damage", 1)), fr]
+		GameManager.WEAPON_RAILGUN:
+			return "%d damage, pierces all, %.1fx range" % [int(tier.get("damage", 15)), float(tier.get("lifetime_mult", 2.0))]
 	return ""
+
+
+func _lock_summary(weapon_id: int) -> String:
+	match weapon_id:
+		GameManager.WEAPON_LIGHTNING:
+			return "Chains lightning between nearby zombies"
+		GameManager.WEAPON_FLAME:
+			return "Wide cone of fire — crowd clearer"
+		GameManager.WEAPON_RAILGUN:
+			return "Ultimate sniper — 15+ damage, pierces everything"
+	return "Locked"
 
 
 func _on_upgrade_pressed(weapon_id: int) -> void:
 	LevelManager.upgrade_weapon(weapon_id)
+
+
+func _on_unlock_pressed(weapon_id: int) -> void:
+	LevelManager.unlock_weapon(weapon_id)
+
+
+func _on_weapon_unlocked(_id: int) -> void:
+	_rebuild()
 
 
 func _on_banked_changed(_kills: int) -> void:

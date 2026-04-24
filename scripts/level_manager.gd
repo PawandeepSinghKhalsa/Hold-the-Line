@@ -10,6 +10,7 @@ signal best_kills_updated(level_index: int, kills: int)
 signal banked_kills_changed(kills: int)
 signal upgrade_purchased(upgrade_key: String, new_level: int)
 signal weapon_tier_changed(weapon_id: int, tier_index: int)
+signal weapon_unlocked(weapon_id: int)
 
 const PROGRESS_PATH := "user://progress.cfg"
 
@@ -63,6 +64,11 @@ var upgrade_levels: Dictionary = {
 # 0-indexed tier — 0 is the free default.
 var weapon_tiers: Dictionary = {}
 
+# Whether each weapon is unlocked. Vanilla weapons (Shotgun / MG / Sniper
+# / Rocket) default to true. Weapons listed in GameManager.WEAPON_UNLOCK_
+# COSTS default to false and are bought via unlock_weapon.
+var unlocked_weapons: Dictionary = {}
+
 
 func _ready() -> void:
 	best_kills.clear()
@@ -70,6 +76,7 @@ func _ready() -> void:
 		best_kills.append(0)
 	for weapon_id in GameManager.WEAPON_TIERS.keys():
 		weapon_tiers[weapon_id] = 0
+		unlocked_weapons[weapon_id] = not GameManager.WEAPON_UNLOCK_COSTS.has(weapon_id)
 	_load_progress()
 
 
@@ -233,6 +240,28 @@ func upgrade_weapon(weapon_id: int) -> bool:
 	return true
 
 
+func is_weapon_unlocked(weapon_id: int) -> bool:
+	return bool(unlocked_weapons.get(weapon_id, true))
+
+
+func weapon_unlock_cost(weapon_id: int) -> int:
+	return int(GameManager.WEAPON_UNLOCK_COSTS.get(weapon_id, 0))
+
+
+func unlock_weapon(weapon_id: int) -> bool:
+	if is_weapon_unlocked(weapon_id):
+		return false
+	var cost: int = weapon_unlock_cost(weapon_id)
+	if cost <= 0 or banked_kills < cost:
+		return false
+	banked_kills -= cost
+	unlocked_weapons[weapon_id] = true
+	banked_kills_changed.emit(banked_kills)
+	weapon_unlocked.emit(weapon_id)
+	_save_progress()
+	return true
+
+
 func _load_progress() -> void:
 	var cfg: ConfigFile = ConfigFile.new()
 	if cfg.load(PROGRESS_PATH) != OK:
@@ -244,6 +273,8 @@ func _load_progress() -> void:
 		upgrade_levels[key] = int(cfg.get_value("upgrades", key, 0))
 	for weapon_id in GameManager.WEAPON_TIERS.keys():
 		weapon_tiers[weapon_id] = int(cfg.get_value("arsenal", "tier_%d" % int(weapon_id), 0))
+		var default_unlocked: bool = not GameManager.WEAPON_UNLOCK_COSTS.has(weapon_id)
+		unlocked_weapons[weapon_id] = bool(cfg.get_value("arsenal", "unlocked_%d" % int(weapon_id), default_unlocked))
 
 
 func _save_progress() -> void:
@@ -255,4 +286,6 @@ func _save_progress() -> void:
 		cfg.set_value("upgrades", key, upgrade_level(key))
 	for weapon_id in weapon_tiers.keys():
 		cfg.set_value("arsenal", "tier_%d" % int(weapon_id), int(weapon_tiers[weapon_id]))
+	for weapon_id in unlocked_weapons.keys():
+		cfg.set_value("arsenal", "unlocked_%d" % int(weapon_id), bool(unlocked_weapons[weapon_id]))
 	cfg.save(PROGRESS_PATH)

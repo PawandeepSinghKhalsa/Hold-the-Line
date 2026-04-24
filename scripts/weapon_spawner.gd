@@ -41,7 +41,16 @@ func _spawn_crate() -> void:
 		GameManager.WEAPON_MACHINE_GUN,
 		GameManager.WEAPON_SNIPER,
 		GameManager.WEAPON_ROCKET,
+		GameManager.WEAPON_LIGHTNING,
+		GameManager.WEAPON_FLAME,
+		GameManager.WEAPON_RAILGUN,
 	]
-	crate.set("weapon_id", weapon_choices[randi() % weapon_choices.size()])
+	var unlocked: Array = []
+	for id in weapon_choices:
+		if LevelManager.is_weapon_unlocked(id):
+			unlocked.append(id)
+	if unlocked.is_empty():
+		return
+	crate.set("weapon_id", unlocked[randi() % unlocked.size()])
 	get_tree().current_scene.add_child(crate)
 	crate.global_position = Vector3(lane_x, 0.0, spawn_z)
