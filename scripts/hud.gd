@@ -115,15 +115,16 @@ func _on_run_ended(won: bool) -> void:
 	banner.visible = true
 	supercharge_button.disabled = true
 	supercharge_button.modulate = Color(0.4, 0.4, 0.4, 0.4)
+	var kills: int = GameManager.kills_this_run
 	if won:
-		banner.text = "VICTORY — Horde cleared"
+		banner.text = "VICTORY — %d kills" % kills
 		banner.modulate = Color(0.4, 1, 0.5, 1)
 		if LevelManager.has_next():
 			post_run_button.text = "NEXT LEVEL"
 		else:
 			post_run_button.text = "YOU BEAT THE GAME — play again"
 	else:
-		banner.text = "GAME OVER — Zombie reached you"
+		banner.text = "GAME OVER — %d kills before you fell" % kills
 		banner.modulate = Color(1, 0.4, 0.4, 1)
 		post_run_button.text = "RETRY"
 	hint_label.text = ""

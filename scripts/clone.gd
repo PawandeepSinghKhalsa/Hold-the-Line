@@ -47,3 +47,4 @@ func _shoot() -> void:
 		return
 	get_tree().current_scene.add_child(bullet)
 	bullet.global_position = global_position + BULLET_SPAWN_OFFSET
+	Effects.spawn_muzzle_flash(bullet.global_position)

@@ -24,6 +24,7 @@ func _physics_process(delta: float) -> void:
 			continue
 		var zombie_center: Vector3 = zombie.global_position + Vector3(0, 0.75, 0)
 		if global_position.distance_to(zombie_center) < HIT_RADIUS:
+			Effects.spawn_bullet_impact(zombie_center)
 			if zombie.has_method("take_damage"):
 				zombie.take_damage(DAMAGE)
 			queue_free()

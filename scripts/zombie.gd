@@ -124,6 +124,11 @@ func take_damage(amount: int) -> void:
 	hp -= amount
 	if hp <= 0:
 		_dead = true
+		var burst_pos: Vector3 = global_position + Vector3(0, 0.85, 0)
+		if max_hp >= BOSS_HP_THRESHOLD:
+			Effects.spawn_boss_death(burst_pos)
+		else:
+			Effects.spawn_zombie_death(burst_pos)
 		GameManager.on_zombie_killed()
 		GameManager.add_kill_charge()
 		queue_free()

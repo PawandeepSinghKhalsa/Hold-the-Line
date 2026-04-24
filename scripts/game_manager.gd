@@ -36,6 +36,7 @@ const SUPERCHARGE_FIRE_MULTIPLIER := 2.0
 var is_running: bool = false
 var zombies_total: int = 0
 var zombies_remaining: int = 0
+var kills_this_run: int = 0
 var squad_size: int = 1
 var supercharge: float = 0.0
 var supercharge_uses_remaining: int = SUPERCHARGE_USES_PER_RUN
@@ -53,6 +54,7 @@ func reset() -> void:
 	is_running = true
 	zombies_total = 0
 	zombies_remaining = 0
+	kills_this_run = 0
 	squad_size = 1
 	supercharge = 0.0
 	supercharge_uses_remaining = SUPERCHARGE_USES_PER_RUN
@@ -79,6 +81,7 @@ func add_zombies(n: int) -> void:
 func on_zombie_killed() -> void:
 	if not is_running:
 		return
+	kills_this_run += 1
 	zombies_remaining = max(0, zombies_remaining - 1)
 	zombies_remaining_changed.emit(zombies_remaining)
 	if zombies_remaining == 0:
