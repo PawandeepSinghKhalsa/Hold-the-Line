@@ -12,11 +12,14 @@ const MELEE_RANGE := 0.9
 @export var max_hp: int = 1
 var hp: int
 var lane_index: int = 1  # Used by the spawner for initial placement only.
+var _target_jitter: Vector3 = Vector3.ZERO
 
 
 func _ready() -> void:
 	hp = max_hp
 	add_to_group("zombies")
+	# Per-zombie offset so 42 zombies don't all pile on the same world point.
+	_target_jitter = Vector3(randf_range(-0.8, 0.8), 0.0, randf_range(-0.4, 0.4))
 
 
 func _physics_process(_delta: float) -> void:
@@ -28,10 +31,11 @@ func _physics_process(_delta: float) -> void:
 	if soldier == null:
 		velocity = Vector3(0, 0, WALK_SPEED)
 	else:
-		var to_soldier := soldier.global_position - global_position
-		to_soldier.y = 0
-		if to_soldier.length() > 0.01:
-			velocity = to_soldier.normalized() * WALK_SPEED
+		var target := soldier.global_position + _target_jitter
+		var to_target := target - global_position
+		to_target.y = 0
+		if to_target.length() > 0.05:
+			velocity = to_target.normalized() * WALK_SPEED
 		else:
 			velocity = Vector3.ZERO
 
