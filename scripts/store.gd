@@ -84,11 +84,8 @@ func _make_card(key: String) -> Control:
 	name_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	top_row.add_child(name_label)
 
-	var pips_label: Label = Label.new()
-	pips_label.text = _pips(key, upgrade.max_level)
-	pips_label.add_theme_font_size_override("font_size", 28)
-	pips_label.add_theme_color_override("font_color", tint)
-	top_row.add_child(pips_label)
+	var pips_node: Control = _make_pips_node(key, upgrade.max_level, tint)
+	top_row.add_child(pips_node)
 
 	# Description
 	var desc_label: Label = Label.new()
@@ -150,11 +147,37 @@ func _make_card(key: String) -> Control:
 	return card
 
 
-func _pips(key: String, max_level: int) -> String:
+func _make_pips_node(key: String, max_level: int, tint: Color) -> Control:
+	# Pips used to be ●/○ Unicode glyphs but Godot's default font doesn't
+	# ship those codepoints — they rendered as tofu squares on mobile.
+	# Building them as tiny rounded PanelContainers instead so they're
+	# guaranteed to draw correctly on every platform.
 	var current: int = LevelManager.upgrade_level(key)
-	var filled: String = "●".repeat(current)
-	var empty: String = "○".repeat(max(max_level - current, 0))
-	return filled + empty
+	var hbox: HBoxContainer = HBoxContainer.new()
+	hbox.add_theme_constant_override("separation", 6)
+	hbox.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+
+	for i in range(max_level):
+		var pip: PanelContainer = PanelContainer.new()
+		pip.custom_minimum_size = Vector2(22, 22)
+		var style: StyleBoxFlat = StyleBoxFlat.new()
+		if i < current:
+			style.bg_color = tint
+		else:
+			style.bg_color = Color(0.22, 0.2, 0.26, 1)
+			style.border_width_left = 2
+			style.border_width_top = 2
+			style.border_width_right = 2
+			style.border_width_bottom = 2
+			style.border_color = Color(0.5, 0.45, 0.55, 1)
+		style.corner_radius_top_left = 11
+		style.corner_radius_top_right = 11
+		style.corner_radius_bottom_left = 11
+		style.corner_radius_bottom_right = 11
+		pip.add_theme_stylebox_override("panel", style)
+		hbox.add_child(pip)
+
+	return hbox
 
 
 func _on_buy_pressed(key: String) -> void:
