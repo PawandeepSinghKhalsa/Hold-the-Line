@@ -125,4 +125,5 @@ func take_damage(amount: int) -> void:
 	if hp <= 0:
 		_dead = true
 		GameManager.on_zombie_killed()
+		GameManager.add_kill_charge()
 		queue_free()
