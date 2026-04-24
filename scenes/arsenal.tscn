@@ -70,14 +70,16 @@ theme_override_font_sizes/font_size = 32
 text = "0 kills banked"
 horizontal_alignment = 1
 
-[node name="Cards" type="VBoxContainer" parent="Margin/VBox"]
+[node name="CardsScroll" type="ScrollContainer" parent="Margin/VBox"]
 layout_mode = 2
-alignment = 1
-theme_override_constants/separation = 18
+size_flags_vertical = 3
+horizontal_scroll_mode = 0
 
-[node name="Spacer" type="Control" parent="Margin/VBox"]
-custom_minimum_size = Vector2(0, 20)
+[node name="Cards" type="VBoxContainer" parent="Margin/VBox/CardsScroll"]
 layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_constants/separation = 18
 
 [node name="BackButton" type="Button" parent="Margin/VBox"]
 custom_minimum_size = Vector2(220, 64)

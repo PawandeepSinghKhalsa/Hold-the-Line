@@ -197,7 +197,7 @@ func _on_run_ended(won: bool) -> void:
 	supercharge_button.modulate = Color(0.4, 0.4, 0.4, 0.4)
 	var kills: int = GameManager.kills_this_run
 	var new_record: bool = LevelManager.record_kills(LevelManager.current_level, kills)
-	var record_suffix: String = "  ★ NEW RECORD" if new_record else ""
+	var record_suffix: String = "  - NEW RECORD" if new_record else ""
 	# Every run banks its kills toward the Store — win or lose.
 	LevelManager.add_banked_kills(kills)
 	var banked_suffix: String = "  (+%d banked)" % kills if kills > 0 else ""

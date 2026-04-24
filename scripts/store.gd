@@ -7,7 +7,7 @@ extends Control
 
 @onready var banked_label: Label = $Margin/VBox/BankedLabel
 @onready var back_button: Button = $Margin/VBox/BackButton
-@onready var cards_container: VBoxContainer = $Margin/VBox/Cards
+@onready var cards_container: VBoxContainer = $Margin/VBox/CardsScroll/Cards
 
 const CARD_BG_COLOR := Color(0.13, 0.11, 0.17, 1.0)
 const CARD_DISABLED_TINT := Color(0.6, 0.6, 0.65, 1.0)
@@ -43,8 +43,8 @@ func _make_card(key: String) -> Control:
 	var tint: Color = CARD_COLORS.get(key, Color(1, 1, 1))
 
 	var card: PanelContainer = PanelContainer.new()
-	card.custom_minimum_size = Vector2(480, 180)
-	card.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	card.custom_minimum_size = Vector2(0, 180)
+	card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 
 	var style: StyleBoxFlat = StyleBoxFlat.new()
 	style.bg_color = CARD_BG_COLOR
@@ -70,7 +70,7 @@ func _make_card(key: String) -> Control:
 	vbox.add_child(top_row)
 
 	var badge: Label = Label.new()
-	badge.text = CARD_ICONS.get(key, "★")
+	badge.text = CARD_ICONS.get(key, "*")
 	badge.add_theme_font_size_override("font_size", 22)
 	badge.add_theme_color_override("font_color", tint)
 	badge.custom_minimum_size = Vector2(72, 0)

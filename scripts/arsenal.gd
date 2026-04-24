@@ -7,7 +7,7 @@ extends Control
 
 @onready var banked_label: Label = $Margin/VBox/BankedLabel
 @onready var back_button: Button = $Margin/VBox/BackButton
-@onready var cards_container: VBoxContainer = $Margin/VBox/Cards
+@onready var cards_container: VBoxContainer = $Margin/VBox/CardsScroll/Cards
 
 const CARD_BG_COLOR := Color(0.13, 0.11, 0.17, 1.0)
 const CARD_COLORS: Dictionary = {
@@ -51,8 +51,8 @@ func _make_card(weapon_id: int) -> Control:
 	var is_equipped: bool = LevelManager.selected_weapon == weapon_id
 
 	var card: PanelContainer = PanelContainer.new()
-	card.custom_minimum_size = Vector2(520, 200)
-	card.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	card.custom_minimum_size = Vector2(0, 200)
+	card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 
 	var style: StyleBoxFlat = StyleBoxFlat.new()
 	style.bg_color = CARD_BG_COLOR if not is_locked else Color(0.1, 0.09, 0.12, 1)
@@ -169,7 +169,7 @@ func _make_card(weapon_id: int) -> Control:
 		equip_button.focus_mode = Control.FOCUS_NONE
 		equip_button.add_theme_font_size_override("font_size", 20)
 		if is_equipped:
-			equip_button.text = "EQUIPPED ✓"
+			equip_button.text = "EQUIPPED"
 			equip_button.disabled = true
 			var eq_style: StyleBoxFlat = StyleBoxFlat.new()
 			eq_style.bg_color = Color(0.25, 0.55, 0.3, 1)
