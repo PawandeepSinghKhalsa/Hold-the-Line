@@ -22,6 +22,18 @@ const LEVELS: Array = [
 		"name": "Level 3",
 		"scene": "res://scenes/level_3.tscn",
 	},
+	{
+		"name": "Level 4",
+		"scene": "res://scenes/level_4.tscn",
+	},
+	{
+		"name": "Level 5 - Twin Bosses",
+		"scene": "res://scenes/level_5.tscn",
+	},
+	{
+		"name": "Level 6 - Triple Boss",
+		"scene": "res://scenes/level_6.tscn",
+	},
 ]
 
 var current_level: int = 0
