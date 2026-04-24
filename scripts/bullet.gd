@@ -15,10 +15,14 @@ const SPEED := 25.0
 const DEFAULT_DAMAGE := 1
 const BASE_LIFETIME := 3.0
 const HIT_RADIUS := 0.55
-# Safety valve: if the scene is flooded with bullets (flamethrower +
-# supercharge stacks can push this to 500+), despawn the oldest ones
-# on spawn so the renderer never collapses under node pressure.
-const MAX_ACTIVE_BULLETS := 90
+# Safety valve: only kicks in during truly pathological spawn rates.
+# The main overload protection lives in Effects particle throttles +
+# GameManager.MIN_FIRE_INTERVAL; this cap exists so a bug couldn't
+# accumulate bullets unboundedly. Set high enough that flamethrower
+# pellets (the densest weapon) live their full lifetime at normal
+# fire rates — 500 active bullets × ~0.75s life ≈ 667 bullets/sec of
+# throughput, well above any realistic configuration.
+const MAX_ACTIVE_BULLETS := 500
 
 var _age: float = 0.0
 var _pierced: Dictionary = {}
