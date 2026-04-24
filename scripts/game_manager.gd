@@ -89,6 +89,29 @@ func apply_multiplier(multiplier: int) -> int:
 	return squad_size - before
 
 
+func apply_add(amount: int) -> int:
+	var before: int = squad_size
+	squad_size = max(1, squad_size + amount)
+	squad_changed.emit(squad_size)
+	return squad_size - before
+
+
+func apply_sub(amount: int) -> int:
+	var before: int = squad_size
+	squad_size = max(1, squad_size - amount)
+	squad_changed.emit(squad_size)
+	return squad_size - before
+
+
+func apply_div(divisor: int) -> int:
+	var before: int = squad_size
+	if divisor <= 1:
+		return 0
+	squad_size = max(1, int(squad_size / divisor))
+	squad_changed.emit(squad_size)
+	return squad_size - before
+
+
 func add_kill_charge(amount: float = KILL_CHARGE_AMOUNT) -> void:
 	if not is_running:
 		return
