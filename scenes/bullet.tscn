@@ -16,8 +16,6 @@ emission = Color(1, 0.8, 0.2, 1)
 emission_energy_multiplier = 0.8
 
 [node name="Bullet" type="Area3D"]
-collision_layer = 4
-collision_mask = 2
 script = ExtResource("1_bullet")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="."]

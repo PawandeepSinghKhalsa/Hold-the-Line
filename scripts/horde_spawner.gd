@@ -25,8 +25,10 @@ func _spawn_horde() -> void:
 			var z := zombie_scene.instantiate()
 			get_tree().current_scene.add_child(z)
 			z.lane_index = lane_idx
+			var x_jitter := randf_range(-0.4, 0.4)
+			var z_jitter := randf_range(-0.3, 0.3)
 			z.global_position = Vector3(
-				GameManager.LANE_X_POSITIONS[lane_idx],
+				GameManager.LANE_X_POSITIONS[lane_idx] + x_jitter,
 				0.1,
-				horde_front_z - row * row_spacing
+				horde_front_z - row * row_spacing + z_jitter
 			)

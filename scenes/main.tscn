@@ -80,8 +80,8 @@ target_path = NodePath("../Soldier")
 [node name="HordeSpawner" type="Node3D" parent="."]
 script = ExtResource("5_spawner")
 zombie_scene = ExtResource("4_zombie")
-zombies_per_lane = 14
-row_spacing = 1.4
+zombies_per_lane = 8
+row_spacing = 1.6
 horde_front_z = -95.0
 
 [node name="HUD" parent="." instance=ExtResource("2_hud")]

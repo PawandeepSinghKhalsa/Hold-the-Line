@@ -8,6 +8,10 @@ extends CharacterBody3D
 
 const WALK_SPEED := 3.0
 const MELEE_RANGE := 0.9
+# Extra multiplier on the lateral component of the chase vector so zombies
+# from outer lanes visibly peel toward the soldier's lane rather than
+# tracking him at forward-speed only.
+const LATERAL_GAIN := 1.4
 
 @export var max_hp: int = 1
 var hp: int
@@ -35,7 +39,9 @@ func _physics_process(_delta: float) -> void:
 		var to_target := target - global_position
 		to_target.y = 0
 		if to_target.length() > 0.05:
-			velocity = to_target.normalized() * WALK_SPEED
+			var dir := to_target.normalized()
+			velocity = dir * WALK_SPEED
+			velocity.x *= LATERAL_GAIN
 		else:
 			velocity = Vector3.ZERO
 
