@@ -88,24 +88,15 @@ right_value = 3
 
 [node name="Gate2" parent="." instance=ExtResource("6_gate")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -28)
-left_op = "add"
-left_value = 5
-right_op = "add"
-right_value = 10
+random_combo = true
 
 [node name="Gate3" parent="." instance=ExtResource("6_gate")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -44)
-left_op = "add"
-left_value = 12
-right_op = "div"
-right_value = 2
+random_combo = true
 
 [node name="Gate4" parent="." instance=ExtResource("6_gate")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -60)
-left_op = "add"
-left_value = 8
-right_op = "sub"
-right_value = 3
+random_combo = true
 
 [node name="AdvanceGroupA" type="Node3D" parent="."]
 script = ExtResource("5_spawner")

@@ -19,18 +19,62 @@ extends Node3D
 @export var right_op: String = "mul"
 @export var right_value: int = 3
 @export var clone_scene: PackedScene
+# When true, left_op/right_op/left_value/right_value are re-rolled at
+# _ready using one of four combo templates: pos/neg, neg/pos, pos/pos,
+# neg/neg. Gives every run a slightly different gate layout.
+@export var random_combo: bool = false
 
 const TRIGGER_DEPTH := 0.6
+const POS_MIN := 3
+const POS_MAX := 10
+const NEG_MIN := 3
+const NEG_MAX := 7
 
 var _consumed: bool = false
 var _soldier: Node3D = null
 
 
 func _ready() -> void:
+	if random_combo:
+		_randomize_combo()
 	if has_node("LeftHalf/Label"):
 		(get_node("LeftHalf/Label") as Label3D).text = _format_label(left_op, left_value)
 	if has_node("RightHalf/Label"):
 		(get_node("RightHalf/Label") as Label3D).text = _format_label(right_op, right_value)
+
+
+func _randomize_combo() -> void:
+	var combo: int = randi_range(0, 3)
+	match combo:
+		0:  # pos / neg
+			left_op = "add"
+			left_value = randi_range(POS_MIN, POS_MAX)
+			right_op = "sub"
+			right_value = randi_range(NEG_MIN, NEG_MAX)
+		1:  # neg / pos
+			left_op = "sub"
+			left_value = randi_range(NEG_MIN, NEG_MAX)
+			right_op = "add"
+			right_value = randi_range(POS_MIN, POS_MAX)
+		2:  # pos / pos (different values)
+			left_op = "add"
+			left_value = randi_range(POS_MIN, POS_MAX)
+			right_op = "add"
+			right_value = _different_value(left_value, POS_MIN, POS_MAX)
+		_:  # neg / neg (different values)
+			left_op = "sub"
+			left_value = randi_range(NEG_MIN, NEG_MAX)
+			right_op = "sub"
+			right_value = _different_value(left_value, NEG_MIN, NEG_MAX)
+
+
+func _different_value(avoid: int, lo: int, hi: int) -> int:
+	var v: int = randi_range(lo, hi)
+	# Two-try loop is plenty for small ranges; if everything collides just
+	# accept the duplicate — the player still has a valid choice.
+	if v == avoid:
+		v = randi_range(lo, hi)
+	return v
 
 
 func _process(_delta: float) -> void:
