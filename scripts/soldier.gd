@@ -7,7 +7,7 @@ extends CharacterBody3D
 
 signal lane_changed(new_lane: int)
 
-const STRAFE_SPEED := 3.2
+const STRAFE_SPEED := 1.2
 const BRIDGE_HALF_WIDTH := 2.1
 const FIRE_INTERVAL := 0.5
 const BULLET_SPAWN_OFFSET := Vector3(0, 0.9, -0.5)
