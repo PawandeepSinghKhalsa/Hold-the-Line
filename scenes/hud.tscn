@@ -23,6 +23,10 @@ layout_mode = 2
 layout_mode = 2
 text = "Lane: 2"
 
+[node name="SquadLabel" type="Label" parent="Margin/VBox"]
+layout_mode = 2
+text = "Squad: 1"
+
 [node name="ZombiesLabel" type="Label" parent="Margin/VBox"]
 layout_mode = 2
 text = "Zombies: 0"

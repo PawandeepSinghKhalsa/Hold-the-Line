@@ -1,8 +1,9 @@
 extends CanvasLayer
 
-# Phase 1+2 HUD: lane, zombies remaining, distance, win/lose banner.
+# Phase 1-3 HUD: lane, squad, zombies remaining, distance, win/lose banner.
 
 @onready var lane_label: Label = $Margin/VBox/LaneLabel
+@onready var squad_label: Label = $Margin/VBox/SquadLabel
 @onready var zombies_label: Label = $Margin/VBox/ZombiesLabel
 @onready var distance_label: Label = $Margin/VBox/DistanceLabel
 @onready var hint_label: Label = $Margin/VBox/HintLabel
@@ -12,8 +13,10 @@ extends CanvasLayer
 func _ready() -> void:
 	GameManager.run_ended.connect(_on_run_ended)
 	GameManager.zombies_remaining_changed.connect(_on_zombies_changed)
+	GameManager.squad_changed.connect(_on_squad_changed)
 	banner.visible = false
 	_on_zombies_changed(GameManager.zombies_remaining)
+	_on_squad_changed(GameManager.squad_size)
 	var soldier_node: Node = get_tree().get_first_node_in_group("soldier")
 	if soldier_node != null and soldier_node.has_signal("lane_changed"):
 		soldier_node.lane_changed.connect(_on_lane_changed)
@@ -30,6 +33,10 @@ func _process(_delta: float) -> void:
 
 func _on_lane_changed(new_lane: int) -> void:
 	lane_label.text = "Lane: %d" % (new_lane + 1)
+
+
+func _on_squad_changed(new_size: int) -> void:
+	squad_label.text = "Squad: %d" % new_size
 
 
 func _on_zombies_changed(remaining: int) -> void:

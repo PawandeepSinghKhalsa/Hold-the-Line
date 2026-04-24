@@ -1,10 +1,11 @@
-[gd_scene load_steps=11 format=3]
+[gd_scene load_steps=12 format=3]
 
 [ext_resource type="PackedScene" path="res://scenes/soldier.tscn" id="1_soldier"]
 [ext_resource type="PackedScene" path="res://scenes/hud.tscn" id="2_hud"]
 [ext_resource type="Script" path="res://scripts/camera_follow.gd" id="3_camera"]
 [ext_resource type="PackedScene" path="res://scenes/zombie.tscn" id="4_zombie"]
 [ext_resource type="Script" path="res://scripts/horde_spawner.gd" id="5_spawner"]
+[ext_resource type="PackedScene" path="res://scenes/gate.tscn" id="6_gate"]
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_bridge"]
 size = Vector3(4.5, 0.4, 100)
@@ -77,11 +78,21 @@ transform = Transform3D(1, 0, 0, 0, 0.866, 0.5, 0, -0.5, 0.866, 0, 4.5, 9)
 script = ExtResource("3_camera")
 target_path = NodePath("../Soldier")
 
+[node name="Gate1" parent="." instance=ExtResource("6_gate")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -12)
+left_multiplier = 2
+right_multiplier = 3
+
+[node name="Gate2" parent="." instance=ExtResource("6_gate")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -28)
+left_multiplier = 2
+right_multiplier = 3
+
 [node name="HordeSpawner" type="Node3D" parent="."]
 script = ExtResource("5_spawner")
 zombie_scene = ExtResource("4_zombie")
-zombies_per_lane = 8
-row_spacing = 1.6
+zombies_per_lane = 34
+row_spacing = 1.2
 horde_front_z = -95.0
 
 [node name="HUD" parent="." instance=ExtResource("2_hud")]
