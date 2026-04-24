@@ -23,6 +23,8 @@ func _ready() -> void:
 	GameManager.zombies_remaining_changed.connect(_on_zombies_changed)
 	GameManager.squad_changed.connect(_on_squad_changed)
 	GameManager.supercharge_changed.connect(_on_supercharge_changed)
+	GameManager.supercharge_uses_changed.connect(_on_supercharge_uses_changed)
+	GameManager.supercharge_boost_changed.connect(_on_supercharge_boost_changed)
 	supercharge_button.pressed.connect(_on_supercharge_button_pressed)
 	post_run_button.pressed.connect(_on_post_run_pressed)
 	banner.visible = false
@@ -30,6 +32,8 @@ func _ready() -> void:
 	_on_zombies_changed(GameManager.zombies_remaining)
 	_on_squad_changed(GameManager.squad_size)
 	_on_supercharge_changed(GameManager.supercharge)
+	_on_supercharge_uses_changed(GameManager.supercharge_uses_remaining)
+	_on_supercharge_boost_changed(GameManager.is_boost_active(), 0.0)
 	level_label.text = LevelManager.current_name()
 	var soldier_node: Node = get_tree().get_first_node_in_group("soldier")
 	if soldier_node != null and soldier_node.has_signal("lane_changed"):
@@ -44,10 +48,11 @@ func _unhandled_input(event: InputEvent) -> void:
 
 func _process(_delta: float) -> void:
 	var soldier: Node3D = get_tree().get_first_node_in_group("soldier") as Node3D
-	if soldier == null:
-		return
-	var distance: float = max(0.0, -soldier.global_position.z)
-	distance_label.text = "Distance: %.1f m" % distance
+	if soldier != null:
+		var distance: float = max(0.0, -soldier.global_position.z)
+		distance_label.text = "Distance: %.1f m" % distance
+	if GameManager.is_boost_active():
+		_refresh_button_label()
 
 
 func _on_lane_changed(new_lane: int) -> void:
@@ -64,12 +69,41 @@ func _on_zombies_changed(remaining: int) -> void:
 
 func _on_supercharge_changed(fill: float) -> void:
 	supercharge_bar.value = fill
-	var is_full: bool = fill >= GameManager.SUPERCHARGE_MAX
-	supercharge_button.disabled = not is_full
-	if is_full:
+	_refresh_button_state()
+
+
+func _on_supercharge_uses_changed(_uses_left: int) -> void:
+	_refresh_button_state()
+
+
+func _on_supercharge_boost_changed(_is_active: bool, _time_left: float) -> void:
+	_refresh_button_state()
+
+
+func _refresh_button_state() -> void:
+	var uses: int = GameManager.supercharge_uses_remaining
+	var full: bool = GameManager.supercharge >= GameManager.SUPERCHARGE_MAX
+	var boost_active: bool = GameManager.is_boost_active()
+	var can_fire: bool = full and uses > 0 and not boost_active
+
+	supercharge_button.disabled = not can_fire
+	if boost_active:
+		supercharge_button.modulate = Color(0.4, 1.0, 0.6, 1.0)
+	elif can_fire:
 		supercharge_button.modulate = Color(1.0, 0.95, 0.4, 1.0)
 	else:
 		supercharge_button.modulate = Color(0.55, 0.55, 0.55, 0.6)
+	_refresh_button_label()
+
+
+func _refresh_button_label() -> void:
+	var uses: int = GameManager.supercharge_uses_remaining
+	if GameManager.is_boost_active():
+		supercharge_button.text = "BOOST! %.1fs" % GameManager._boost_time_left
+	elif uses <= 0:
+		supercharge_button.text = "SUPERCHARGE (spent)"
+	else:
+		supercharge_button.text = "SUPERCHARGE (%d left)" % uses
 
 
 func _on_supercharge_button_pressed() -> void:
@@ -103,6 +137,5 @@ func _on_post_run_pressed() -> void:
 	if LevelManager.has_next():
 		LevelManager.load_next()
 	else:
-		# Player cleared the final level — loop back to level 1.
 		LevelManager.current_level = 0
 		LevelManager.load_current()

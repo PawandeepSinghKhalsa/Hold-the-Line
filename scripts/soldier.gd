@@ -66,7 +66,7 @@ func _physics_process(delta: float) -> void:
 
 	_fire_cooldown -= delta
 	if _fire_cooldown <= 0.0:
-		_fire_cooldown = FIRE_INTERVAL
+		_fire_cooldown = FIRE_INTERVAL / GameManager.fire_rate_multiplier()
 		_shoot()
 
 
