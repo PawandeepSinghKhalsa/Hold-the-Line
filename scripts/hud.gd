@@ -1,8 +1,10 @@
 extends CanvasLayer
 
-# Phase 1-4 HUD: lane, squad, zombies remaining, distance, supercharge
-# bar + trigger button, win/lose banner.
+# Phase 1-5 HUD: level, lane, squad, zombies remaining, distance,
+# supercharge bar + trigger button, win/lose banner, and a post-run
+# button that routes Next Level (on victory) or Retry (on defeat).
 
+@onready var level_label: Label = $Margin/VBox/LevelLabel
 @onready var lane_label: Label = $Margin/VBox/LaneLabel
 @onready var squad_label: Label = $Margin/VBox/SquadLabel
 @onready var zombies_label: Label = $Margin/VBox/ZombiesLabel
@@ -11,6 +13,9 @@ extends CanvasLayer
 @onready var hint_label: Label = $Margin/VBox/HintLabel
 @onready var banner: Label = $Margin/VBox/Banner
 @onready var supercharge_button: Button = $SuperchargeButton
+@onready var post_run_button: Button = $PostRunButton
+
+var _last_run_won: bool = false
 
 
 func _ready() -> void:
@@ -19,10 +24,13 @@ func _ready() -> void:
 	GameManager.squad_changed.connect(_on_squad_changed)
 	GameManager.supercharge_changed.connect(_on_supercharge_changed)
 	supercharge_button.pressed.connect(_on_supercharge_button_pressed)
+	post_run_button.pressed.connect(_on_post_run_pressed)
 	banner.visible = false
+	post_run_button.visible = false
 	_on_zombies_changed(GameManager.zombies_remaining)
 	_on_squad_changed(GameManager.squad_size)
 	_on_supercharge_changed(GameManager.supercharge)
+	level_label.text = LevelManager.current_name()
 	var soldier_node: Node = get_tree().get_first_node_in_group("soldier")
 	if soldier_node != null and soldier_node.has_signal("lane_changed"):
 		soldier_node.lane_changed.connect(_on_lane_changed)
@@ -69,13 +77,32 @@ func _on_supercharge_button_pressed() -> void:
 
 
 func _on_run_ended(won: bool) -> void:
+	_last_run_won = won
 	banner.visible = true
 	supercharge_button.disabled = true
 	supercharge_button.modulate = Color(0.4, 0.4, 0.4, 0.4)
 	if won:
 		banner.text = "VICTORY — Horde cleared"
 		banner.modulate = Color(0.4, 1, 0.5, 1)
+		if LevelManager.has_next():
+			post_run_button.text = "NEXT LEVEL"
+		else:
+			post_run_button.text = "YOU BEAT THE GAME — play again"
 	else:
 		banner.text = "GAME OVER — Zombie reached you"
 		banner.modulate = Color(1, 0.4, 0.4, 1)
-	hint_label.text = "Refresh to play again"
+		post_run_button.text = "RETRY"
+	hint_label.text = ""
+	post_run_button.visible = true
+
+
+func _on_post_run_pressed() -> void:
+	if not _last_run_won:
+		LevelManager.reload_current()
+		return
+	if LevelManager.has_next():
+		LevelManager.load_next()
+	else:
+		# Player cleared the final level — loop back to level 1.
+		LevelManager.current_level = 0
+		LevelManager.load_current()
