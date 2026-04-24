@@ -108,7 +108,7 @@ zombie_scene = ExtResource("4_zombie")
 zombies_per_lane = 50
 row_spacing = 1.0
 horde_front_z = -105.0
-tough_rows_from_back = 20
+tough_rows_from_back = 40
 tough_hp = 2
 
 [node name="HUD" parent="." instance=ExtResource("2_hud")]
