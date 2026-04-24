@@ -17,6 +17,7 @@ extends CanvasLayer
 @onready var banner: Label = $Margin/VBox/Banner
 @onready var supercharge_button: Button = $SuperchargeButton
 @onready var post_run_button: Button = $PostRunButton
+@onready var main_menu_button: Button = $MainMenuButton
 @onready var damage_flash: ColorRect = $DamageFlash
 
 var _last_run_won: bool = false
@@ -33,8 +34,10 @@ func _ready() -> void:
 	GameManager.weapon_changed.connect(_on_weapon_changed)
 	supercharge_button.pressed.connect(_on_supercharge_button_pressed)
 	post_run_button.pressed.connect(_on_post_run_pressed)
+	main_menu_button.pressed.connect(_on_main_menu_pressed)
 	banner.visible = false
 	post_run_button.visible = false
+	main_menu_button.visible = false
 	_on_zombies_changed(GameManager.zombies_remaining)
 	_on_squad_changed(GameManager.squad_size)
 	_on_supercharge_changed(GameManager.supercharge)
@@ -160,8 +163,10 @@ func _on_run_ended(won: bool) -> void:
 	supercharge_button.disabled = true
 	supercharge_button.modulate = Color(0.4, 0.4, 0.4, 0.4)
 	var kills: int = GameManager.kills_this_run
+	var new_record: bool = LevelManager.record_kills(LevelManager.current_level, kills)
+	var record_suffix: String = "  ★ NEW RECORD" if new_record else ""
 	if won:
-		banner.text = "VICTORY — %d kills" % kills
+		banner.text = "VICTORY — %d kills%s" % [kills, record_suffix]
 		banner.modulate = Color(0.4, 1, 0.5, 1)
 		Effects.spawn_victory_celebration()
 		if LevelManager.has_next():
@@ -169,11 +174,16 @@ func _on_run_ended(won: bool) -> void:
 		else:
 			post_run_button.text = "YOU BEAT THE GAME — play again"
 	else:
-		banner.text = "GAME OVER — %d kills before you fell" % kills
+		banner.text = "GAME OVER — %d kills%s" % [kills, record_suffix]
 		banner.modulate = Color(1, 0.4, 0.4, 1)
 		post_run_button.text = "RETRY"
 	hint_label.text = ""
 	post_run_button.visible = true
+	main_menu_button.visible = true
+
+
+func _on_main_menu_pressed() -> void:
+	LevelManager.go_to_title()
 
 
 func _on_post_run_pressed() -> void:
