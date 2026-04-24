@@ -24,24 +24,43 @@ func _ready() -> void:
 
 
 func _apply_tough_appearance_if_needed() -> void:
-	# Tough zombies (max_hp >= 2) get a darker body so the player can spot
-	# them and prioritise. Duplicate the material so each instance owns
-	# its override colour.
+	# Tough zombies (max_hp >= 2) get a darker body and a taller capsule
+	# so the player can spot and prioritise them. Material is duplicated
+	# per instance so the colour doesn't bleed across shared zombies.
 	if max_hp < 2:
 		return
+
+	var height_scale: float = 1.3
+	if max_hp >= 3:
+		height_scale = 1.55
+
+	# Base capsule: radius 0.3, height 1.5, positioned at local y=0.75 so
+	# the feet sit at y=0. When we scale along Y the centre needs to move
+	# up by half the added height so the feet stay planted on the bridge.
+	var base_height: float = 1.5
+	var base_center_y: float = 0.75
+	var lifted_center_y: float = base_center_y + base_height * 0.5 * (height_scale - 1.0)
+
 	var mesh_node: Node = get_node_or_null("Mesh")
 	var mesh_instance: MeshInstance3D = mesh_node as MeshInstance3D
-	if mesh_instance == null or mesh_instance.material_override == null:
-		return
-	var unique_material: Material = mesh_instance.material_override.duplicate() as Material
-	mesh_instance.material_override = unique_material
-	var standard_mat: StandardMaterial3D = unique_material as StandardMaterial3D
-	if standard_mat == null:
-		return
-	if max_hp >= 3:
-		standard_mat.albedo_color = Color(0.35, 0.08, 0.15, 1)
-	else:
-		standard_mat.albedo_color = Color(0.55, 0.12, 0.18, 1)
+	if mesh_instance != null:
+		mesh_instance.scale = Vector3(1.0, height_scale, 1.0)
+		mesh_instance.position = Vector3(0, lifted_center_y, 0)
+		if mesh_instance.material_override != null:
+			var unique_material: Material = mesh_instance.material_override.duplicate() as Material
+			mesh_instance.material_override = unique_material
+			var standard_mat: StandardMaterial3D = unique_material as StandardMaterial3D
+			if standard_mat != null:
+				if max_hp >= 3:
+					standard_mat.albedo_color = Color(0.35, 0.08, 0.15, 1)
+				else:
+					standard_mat.albedo_color = Color(0.55, 0.12, 0.18, 1)
+
+	var collision_node: Node = get_node_or_null("CollisionShape3D")
+	var collision_shape: CollisionShape3D = collision_node as CollisionShape3D
+	if collision_shape != null:
+		collision_shape.scale = Vector3(1.0, height_scale, 1.0)
+		collision_shape.position = Vector3(0, lifted_center_y, 0)
 
 
 func _physics_process(_delta: float) -> void:
