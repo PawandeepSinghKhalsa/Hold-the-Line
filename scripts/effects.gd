@@ -10,8 +10,31 @@ extends Node
 
 signal screen_shake_requested(intensity: float, duration: float)
 
+# Token-bucket throttles for the high-frequency particle spawns.
+# Flamethrower tier 3 + supercharge + fire-rate upgrade can otherwise
+# create thousands of CPUParticles3D instances per second, which the
+# WebGL2 renderer can't keep up with and manifests as a black viewport.
+const MUZZLE_BUDGET_PER_SEC := 40.0
+const IMPACT_BUDGET_PER_SEC := 60.0
+const DEATH_BUDGET_PER_SEC := 40.0
+const BUDGET_CEIL := 24.0
+var _muzzle_budget: float = BUDGET_CEIL
+var _impact_budget: float = BUDGET_CEIL
+var _death_budget: float = BUDGET_CEIL
+
+
+func _process(delta: float) -> void:
+	_muzzle_budget = min(_muzzle_budget + delta * MUZZLE_BUDGET_PER_SEC, BUDGET_CEIL)
+	_impact_budget = min(_impact_budget + delta * IMPACT_BUDGET_PER_SEC, BUDGET_CEIL)
+	_death_budget = min(_death_budget + delta * DEATH_BUDGET_PER_SEC, BUDGET_CEIL)
+
 
 func spawn_zombie_death(world_pos: Vector3) -> void:
+	if _death_budget < 1.0:
+		# Still track the kill popup but skip the burst to save draw calls.
+		spawn_kill_popup(world_pos, "+1", Color(1, 1, 0.4, 1))
+		return
+	_death_budget -= 1.0
 	_spawn_burst(
 		world_pos,
 		Color(0.95, 0.2, 0.25),
@@ -49,6 +72,9 @@ func spawn_boss_death(world_pos: Vector3) -> void:
 
 
 func spawn_muzzle_flash(world_pos: Vector3) -> void:
+	if _muzzle_budget < 1.0:
+		return
+	_muzzle_budget -= 1.0
 	_spawn_burst(
 		world_pos,
 		Color(1.0, 0.9, 0.35),
@@ -62,6 +88,9 @@ func spawn_muzzle_flash(world_pos: Vector3) -> void:
 
 
 func spawn_bullet_impact(world_pos: Vector3) -> void:
+	if _impact_budget < 1.0:
+		return
+	_impact_budget -= 1.0
 	_spawn_burst(
 		world_pos,
 		Color(1.0, 0.75, 0.25),

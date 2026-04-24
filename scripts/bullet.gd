@@ -18,7 +18,7 @@ const HIT_RADIUS := 0.55
 # Safety valve: if the scene is flooded with bullets (flamethrower +
 # supercharge stacks can push this to 500+), despawn the oldest ones
 # on spawn so the renderer never collapses under node pressure.
-const MAX_ACTIVE_BULLETS := 140
+const MAX_ACTIVE_BULLETS := 90
 
 var _age: float = 0.0
 var _pierced: Dictionary = {}

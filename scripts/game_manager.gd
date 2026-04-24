@@ -293,7 +293,7 @@ func weapon_time_left() -> float:
 # Minimum fire interval after all multipliers. Prevents flame / MG +
 # supercharge + fire-rate upgrades from spawning thousands of bullets
 # per second (which overwhelms the renderer and blacks the viewport).
-const MIN_FIRE_INTERVAL := 0.07
+const MIN_FIRE_INTERVAL := 0.10
 
 # Per-weapon fire interval, already scaled by the supercharge multiplier.
 func current_fire_interval(base_interval: float) -> float:
