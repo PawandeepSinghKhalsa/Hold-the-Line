@@ -40,19 +40,35 @@ func _physics_process(delta: float) -> void:
 
 	_fire_cooldown -= delta
 	if _fire_cooldown <= 0.0:
-		_fire_cooldown = FIRE_INTERVAL / GameManager.fire_rate_multiplier()
+		_fire_cooldown = GameManager.current_fire_interval(FIRE_INTERVAL)
 		_shoot()
 
 
 func _shoot() -> void:
 	if bullet_scene == null:
 		return
+	var spawn_pos: Vector3 = global_position + BULLET_SPAWN_OFFSET
+	match GameManager.active_weapon:
+		GameManager.WEAPON_SHOTGUN:
+			_spawn_bullet(spawn_pos, Vector3(-0.22, 0, -0.98).normalized(), 1, false)
+			_spawn_bullet(spawn_pos, Vector3(0.0, 0, -1.0), 1, false)
+			_spawn_bullet(spawn_pos, Vector3(0.22, 0, -0.98).normalized(), 1, false)
+		GameManager.WEAPON_SNIPER:
+			_spawn_bullet(spawn_pos, Vector3(0.0, 0, -1.0), 5, true)
+		_:
+			_spawn_bullet(spawn_pos, Vector3(0.0, 0, -1.0), 1, false)
+	Effects.spawn_muzzle_flash(spawn_pos)
+
+
+func _spawn_bullet(spawn_pos: Vector3, direction: Vector3, damage: int, pierce_all: bool) -> void:
 	var bullet: Node3D = bullet_scene.instantiate() as Node3D
 	if bullet == null:
 		return
+	bullet.set("direction", direction)
+	bullet.set("damage_override", damage)
+	bullet.set("pierce_all", pierce_all)
 	get_tree().current_scene.add_child(bullet)
-	bullet.global_position = global_position + BULLET_SPAWN_OFFSET
-	Effects.spawn_muzzle_flash(bullet.global_position)
+	bullet.global_position = spawn_pos
 
 
 func take_damage(amount: int) -> void:

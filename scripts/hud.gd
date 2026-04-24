@@ -11,6 +11,7 @@ extends CanvasLayer
 @onready var squad_label: Label = $Margin/VBox/SquadLabel
 @onready var zombies_label: Label = $Margin/VBox/ZombiesLabel
 @onready var distance_label: Label = $Margin/VBox/DistanceLabel
+@onready var weapon_label: Label = $Margin/VBox/WeaponLabel
 @onready var supercharge_bar: ProgressBar = $Margin/VBox/SuperchargeBar
 @onready var hint_label: Label = $Margin/VBox/HintLabel
 @onready var banner: Label = $Margin/VBox/Banner
@@ -29,6 +30,7 @@ func _ready() -> void:
 	GameManager.supercharge_changed.connect(_on_supercharge_changed)
 	GameManager.supercharge_uses_changed.connect(_on_supercharge_uses_changed)
 	GameManager.supercharge_boost_changed.connect(_on_supercharge_boost_changed)
+	GameManager.weapon_changed.connect(_on_weapon_changed)
 	supercharge_button.pressed.connect(_on_supercharge_button_pressed)
 	post_run_button.pressed.connect(_on_post_run_pressed)
 	banner.visible = false
@@ -38,6 +40,7 @@ func _ready() -> void:
 	_on_supercharge_changed(GameManager.supercharge)
 	_on_supercharge_uses_changed(GameManager.supercharge_uses_remaining)
 	_on_supercharge_boost_changed(GameManager.is_boost_active(), 0.0)
+	_on_weapon_changed(GameManager.active_weapon, GameManager.weapon_time_left())
 	level_label.text = LevelManager.current_name()
 	var soldier_node: Node = get_tree().get_first_node_in_group("soldier")
 	if soldier_node != null:
@@ -139,6 +142,16 @@ func _refresh_button_label() -> void:
 
 func _on_supercharge_button_pressed() -> void:
 	GameManager.try_trigger_supercharge()
+
+
+func _on_weapon_changed(weapon_id: int, time_left: float) -> void:
+	var weapon_name: String = GameManager.WEAPON_NAMES.get(weapon_id, "Pistol")
+	if weapon_id == GameManager.WEAPON_DEFAULT or time_left <= 0.0:
+		weapon_label.text = "Weapon: Pistol"
+		weapon_label.modulate = Color(1, 1, 1, 1)
+	else:
+		weapon_label.text = "Weapon: %s (%.1fs)" % [weapon_name, time_left]
+		weapon_label.modulate = Color(1, 0.95, 0.4, 1)
 
 
 func _on_run_ended(won: bool) -> void:

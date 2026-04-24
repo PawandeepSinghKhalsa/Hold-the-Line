@@ -1,19 +1,27 @@
 extends Area3D
 
-# Travels straight forward (-Z) from the soldier. Uses a distance check
-# against the zombies group every physics tick.
+# Travels along `direction` at SPEED. Uses a distance check against the
+# zombies group every physics tick instead of Area3D signals.
 #
-# Bullets pierce through weak zombies (is_weak=true) — they kill the
-# weak zombie and continue forward. Hitting any non-weak zombie stops
-# the bullet.
+# Bullets can optionally:
+#   - pierce through weak zombies (default — kills them and continues)
+#   - pierce through EVERY zombie (sniper / special weapons) — kills
+#     but never despawns on hit
+#
+# Damage defaults to 1 but shotgun / sniper shots can override it by
+# setting `damage_override` at spawn time.
 
 const SPEED := 25.0
-const DAMAGE := 1
+const DEFAULT_DAMAGE := 1
 const LIFETIME := 3.0
 const HIT_RADIUS := 0.55
 
 var _age: float = 0.0
 var _pierced: Dictionary = {}
+
+@export var direction: Vector3 = Vector3(0, 0, -1)
+@export var damage_override: int = 0  # 0 -> DEFAULT_DAMAGE
+@export var pierce_all: bool = false
 
 
 func _physics_process(delta: float) -> void:
@@ -21,7 +29,9 @@ func _physics_process(delta: float) -> void:
 	if _age >= LIFETIME:
 		queue_free()
 		return
-	global_position.z -= SPEED * delta
+	global_position += direction * SPEED * delta
+
+	var dmg: int = damage_override if damage_override > 0 else DEFAULT_DAMAGE
 
 	for zombie_node in get_tree().get_nodes_in_group("zombies"):
 		var zombie: Node3D = zombie_node as Node3D
@@ -35,9 +45,9 @@ func _physics_process(delta: float) -> void:
 			var is_weak: bool = zombie.get("is_weak") if "is_weak" in zombie else false
 			Effects.spawn_bullet_impact(zombie_center)
 			if zombie.has_method("take_damage"):
-				zombie.take_damage(DAMAGE)
+				zombie.take_damage(dmg)
 			_pierced[zid] = true
-			if not is_weak:
-				queue_free()
-				return
-			# Keep flying and hit the next target this frame / next frames.
+			if pierce_all or is_weak:
+				continue
+			queue_free()
+			return

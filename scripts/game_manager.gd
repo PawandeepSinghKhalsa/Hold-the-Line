@@ -33,6 +33,21 @@ const SUPERCHARGE_USES_PER_RUN := 2
 const SUPERCHARGE_BOOST_DURATION := 4.0
 const SUPERCHARGE_FIRE_MULTIPLIER := 2.0
 
+# Weapon pickups — temporary upgrades dropped in crates on the bridge.
+const WEAPON_DEFAULT := 0
+const WEAPON_SHOTGUN := 1
+const WEAPON_MACHINE_GUN := 2
+const WEAPON_SNIPER := 3
+const WEAPON_PICKUP_DURATION := 8.0
+const WEAPON_NAMES: Dictionary = {
+	WEAPON_DEFAULT: "Pistol",
+	WEAPON_SHOTGUN: "Shotgun",
+	WEAPON_MACHINE_GUN: "Machine Gun",
+	WEAPON_SNIPER: "Sniper",
+}
+
+signal weapon_changed(weapon_id: int, time_left: float)
+
 var is_running: bool = false
 var zombies_total: int = 0
 var zombies_remaining: int = 0
@@ -40,14 +55,20 @@ var kills_this_run: int = 0
 var squad_size: int = 1
 var supercharge: float = 0.0
 var supercharge_uses_remaining: int = SUPERCHARGE_USES_PER_RUN
+var active_weapon: int = WEAPON_DEFAULT
+var _weapon_time_left: float = 0.0
 var _boost_time_left: float = 0.0
 
 
 func _process(delta: float) -> void:
-	if _boost_time_left <= 0.0:
-		return
-	_boost_time_left = max(0.0, _boost_time_left - delta)
-	supercharge_boost_changed.emit(_boost_time_left > 0.0, _boost_time_left)
+	if _boost_time_left > 0.0:
+		_boost_time_left = max(0.0, _boost_time_left - delta)
+		supercharge_boost_changed.emit(_boost_time_left > 0.0, _boost_time_left)
+	if active_weapon != WEAPON_DEFAULT and _weapon_time_left > 0.0:
+		_weapon_time_left = max(0.0, _weapon_time_left - delta)
+		if _weapon_time_left <= 0.0:
+			active_weapon = WEAPON_DEFAULT
+		weapon_changed.emit(active_weapon, _weapon_time_left)
 
 
 func reset() -> void:
@@ -58,12 +79,15 @@ func reset() -> void:
 	squad_size = 1
 	supercharge = 0.0
 	supercharge_uses_remaining = SUPERCHARGE_USES_PER_RUN
+	active_weapon = WEAPON_DEFAULT
+	_weapon_time_left = 0.0
 	_boost_time_left = 0.0
 	zombies_remaining_changed.emit(zombies_remaining)
 	squad_changed.emit(squad_size)
 	supercharge_changed.emit(supercharge)
 	supercharge_uses_changed.emit(supercharge_uses_remaining)
 	supercharge_boost_changed.emit(false, 0.0)
+	weapon_changed.emit(active_weapon, 0.0)
 
 
 func set_level_zombie_count(n: int) -> void:
@@ -162,6 +186,36 @@ func is_boost_active() -> bool:
 
 func fire_rate_multiplier() -> float:
 	return SUPERCHARGE_FIRE_MULTIPLIER if is_boost_active() else 1.0
+
+
+# Pick up a weapon crate. Temporarily replaces the default pistol with
+# the given weapon for WEAPON_PICKUP_DURATION seconds. Re-picking the
+# same weapon just refreshes the timer.
+func activate_weapon(weapon_id: int) -> void:
+	if not is_running:
+		return
+	if weapon_id == WEAPON_DEFAULT:
+		return
+	active_weapon = weapon_id
+	_weapon_time_left = WEAPON_PICKUP_DURATION
+	weapon_changed.emit(active_weapon, _weapon_time_left)
+
+
+func weapon_time_left() -> float:
+	return _weapon_time_left
+
+
+# Per-weapon fire interval, already scaled by the supercharge multiplier.
+func current_fire_interval(base_interval: float) -> float:
+	var interval: float = base_interval
+	match active_weapon:
+		WEAPON_MACHINE_GUN:
+			interval = base_interval * 0.4  # ~2.5x faster
+		WEAPON_SNIPER:
+			interval = base_interval * 2.2  # slow but devastating
+		_:
+			interval = base_interval
+	return interval / fire_rate_multiplier()
 
 
 func end_run(won: bool) -> void:

@@ -7,6 +7,8 @@
 [ext_resource type="Script" path="res://scripts/horde_spawner.gd" id="5_spawner"]
 [ext_resource type="PackedScene" path="res://scenes/gate.tscn" id="6_gate"]
 [ext_resource type="Script" path="res://scripts/boss_spawner.gd" id="7_boss"]
+[ext_resource type="Script" path="res://scripts/weapon_spawner.gd" id="8_weapon"]
+[ext_resource type="PackedScene" path="res://scenes/weapon_crate.tscn" id="9_crate"]
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_bridge"]
 size = Vector3(4.5, 0.4, 160)
@@ -122,5 +124,11 @@ zombie_scene = ExtResource("4_zombie")
 boss_hp = 50
 boss_z = -148.0
 boss_lane = 1
+
+[node name="WeaponSpawner" type="Node3D" parent="."]
+script = ExtResource("8_weapon")
+crate_scene = ExtResource("9_crate")
+spawn_interval = 11.0
+spawn_ahead = 14.0
 
 [node name="HUD" parent="." instance=ExtResource("2_hud")]
