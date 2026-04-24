@@ -74,6 +74,33 @@ func spawn_bullet_impact(world_pos: Vector3) -> void:
 	)
 
 
+func spawn_explosion(world_pos: Vector3, radius: float) -> void:
+	var r: float = max(radius, 1.0)
+	# Orange fireball ball.
+	_spawn_burst(
+		world_pos,
+		Color(1.0, 0.45, 0.15),
+		45,
+		0.7,
+		180.0,
+		r * 2.0,
+		r * 3.5,
+		0.2
+	)
+	# Darker smoke puff trails behind the fireball.
+	_spawn_burst(
+		world_pos,
+		Color(0.3, 0.2, 0.15),
+		20,
+		1.2,
+		160.0,
+		r * 1.2,
+		r * 2.0,
+		0.25
+	)
+	screen_shake_requested.emit(2.4, 0.35)
+
+
 # Floating score text that drifts up and fades out, classic
 # hypercasual-shooter feedback for every kill.
 func spawn_kill_popup(world_pos: Vector3, text: String = "+1", color: Color = Color(1, 1, 0.4, 1), font_size: int = 64) -> void:

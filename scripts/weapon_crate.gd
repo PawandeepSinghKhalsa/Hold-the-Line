@@ -60,5 +60,7 @@ func _color_for_weapon() -> Color:
 			return Color(0.3, 0.65, 1.0)
 		GameManager.WEAPON_SNIPER:
 			return Color(0.35, 0.95, 0.5)
+		GameManager.WEAPON_ROCKET:
+			return Color(0.95, 0.2, 0.25)
 		_:
 			return Color(1, 1, 1)

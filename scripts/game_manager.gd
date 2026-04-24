@@ -38,12 +38,14 @@ const WEAPON_DEFAULT := 0
 const WEAPON_SHOTGUN := 1
 const WEAPON_MACHINE_GUN := 2
 const WEAPON_SNIPER := 3
+const WEAPON_ROCKET := 4
 const WEAPON_PICKUP_DURATION := 8.0
 const WEAPON_NAMES: Dictionary = {
 	WEAPON_DEFAULT: "Pistol",
 	WEAPON_SHOTGUN: "Shotgun",
 	WEAPON_MACHINE_GUN: "Machine Gun",
 	WEAPON_SNIPER: "Sniper",
+	WEAPON_ROCKET: "Rocket",
 }
 
 signal weapon_changed(weapon_id: int, time_left: float)
@@ -213,6 +215,8 @@ func current_fire_interval(base_interval: float) -> float:
 			interval = base_interval * 0.4  # ~2.5x faster
 		WEAPON_SNIPER:
 			interval = base_interval * 2.2  # slow but devastating
+		WEAPON_ROCKET:
+			interval = base_interval * 3.0  # slowest, but blasts a crowd
 		_:
 			interval = base_interval
 	return interval / fire_rate_multiplier()

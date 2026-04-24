@@ -55,6 +55,8 @@ func _shoot() -> void:
 			_spawn_bullet(spawn_pos, Vector3(0.22, 0, -0.98).normalized(), 1, false)
 		GameManager.WEAPON_SNIPER:
 			_spawn_bullet(spawn_pos, Vector3(0.0, 0, -1.0), 5, true)
+		GameManager.WEAPON_ROCKET:
+			_spawn_rocket(spawn_pos, Vector3(0.0, 0, -1.0))
 		_:
 			_spawn_bullet(spawn_pos, Vector3(0.0, 0, -1.0), 1, false)
 	Effects.spawn_muzzle_flash(spawn_pos)
@@ -67,6 +69,19 @@ func _spawn_bullet(spawn_pos: Vector3, direction: Vector3, damage: int, pierce_a
 	bullet.set("direction", direction)
 	bullet.set("damage_override", damage)
 	bullet.set("pierce_all", pierce_all)
+	get_tree().current_scene.add_child(bullet)
+	bullet.global_position = spawn_pos
+
+
+func _spawn_rocket(spawn_pos: Vector3, direction: Vector3) -> void:
+	var bullet: Node3D = bullet_scene.instantiate() as Node3D
+	if bullet == null:
+		return
+	bullet.set("direction", direction)
+	bullet.set("damage_override", 4)
+	bullet.set("pierce_all", false)
+	bullet.set("explosion_radius", 3.5)
+	bullet.set("explosion_damage", 4)
 	get_tree().current_scene.add_child(bullet)
 	bullet.global_position = spawn_pos
 

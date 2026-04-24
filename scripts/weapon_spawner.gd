@@ -40,6 +40,7 @@ func _spawn_crate() -> void:
 		GameManager.WEAPON_SHOTGUN,
 		GameManager.WEAPON_MACHINE_GUN,
 		GameManager.WEAPON_SNIPER,
+		GameManager.WEAPON_ROCKET,
 	]
 	crate.set("weapon_id", weapon_choices[randi() % weapon_choices.size()])
 	get_tree().current_scene.add_child(crate)

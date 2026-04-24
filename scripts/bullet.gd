@@ -22,6 +22,10 @@ var _pierced: Dictionary = {}
 @export var direction: Vector3 = Vector3(0, 0, -1)
 @export var damage_override: int = 0  # 0 -> DEFAULT_DAMAGE
 @export var pierce_all: bool = false
+# When explosion_radius > 0 the bullet triggers an AOE on any impact,
+# damaging every zombie within the sphere for explosion_damage.
+@export var explosion_radius: float = 0.0
+@export var explosion_damage: int = 0
 
 
 func _physics_process(delta: float) -> void:
@@ -47,7 +51,24 @@ func _physics_process(delta: float) -> void:
 			if zombie.has_method("take_damage"):
 				zombie.take_damage(dmg)
 			_pierced[zid] = true
+			if explosion_radius > 0.0:
+				_explode_at(global_position)
+				queue_free()
+				return
 			if pierce_all or is_weak:
 				continue
 			queue_free()
 			return
+
+
+func _explode_at(pos: Vector3) -> void:
+	var aoe_damage: int = explosion_damage if explosion_damage > 0 else 3
+	for zombie_node in get_tree().get_nodes_in_group("zombies"):
+		var zombie: Node3D = zombie_node as Node3D
+		if zombie == null or not is_instance_valid(zombie):
+			continue
+		var zombie_center: Vector3 = zombie.global_position + Vector3(0, 0.75, 0)
+		if pos.distance_to(zombie_center) <= explosion_radius:
+			if zombie.has_method("take_damage"):
+				zombie.take_damage(aoe_damage)
+	Effects.spawn_explosion(pos, explosion_radius)
