@@ -13,7 +13,7 @@ extends Area3D
 
 const SPEED := 25.0
 const DEFAULT_DAMAGE := 1
-const LIFETIME := 3.0
+const BASE_LIFETIME := 3.0
 const HIT_RADIUS := 0.55
 
 var _age: float = 0.0
@@ -22,6 +22,9 @@ var _pierced: Dictionary = {}
 @export var direction: Vector3 = Vector3(0, 0, -1)
 @export var damage_override: int = 0  # 0 -> DEFAULT_DAMAGE
 @export var pierce_all: bool = false
+# Scales base bullet lifetime. Sniper tier 3 uses this for a slug that
+# travels farther before despawning.
+@export var lifetime_multiplier: float = 1.0
 # When explosion_radius > 0 the bullet triggers an AOE on any impact,
 # damaging every zombie within the sphere for explosion_damage.
 @export var explosion_radius: float = 0.0
@@ -30,7 +33,7 @@ var _pierced: Dictionary = {}
 
 func _physics_process(delta: float) -> void:
 	_age += delta
-	if _age >= LIFETIME:
+	if _age >= BASE_LIFETIME * max(lifetime_multiplier, 0.1):
 		queue_free()
 		return
 	global_position += direction * SPEED * delta

@@ -9,6 +9,7 @@ signal level_changed(level_index: int)
 signal best_kills_updated(level_index: int, kills: int)
 signal banked_kills_changed(kills: int)
 signal upgrade_purchased(upgrade_key: String, new_level: int)
+signal weapon_tier_changed(weapon_id: int, tier_index: int)
 
 const PROGRESS_PATH := "user://progress.cfg"
 
@@ -57,11 +58,18 @@ var upgrade_levels: Dictionary = {
 	"weapon_duration": 0,
 }
 
+# Per-weapon upgrade tier the player currently owns. Key is the
+# GameManager weapon_id int (1..4 for the shipped weapons). Value is
+# 0-indexed tier — 0 is the free default.
+var weapon_tiers: Dictionary = {}
+
 
 func _ready() -> void:
 	best_kills.clear()
 	for _i in LEVELS.size():
 		best_kills.append(0)
+	for weapon_id in GameManager.WEAPON_TIERS.keys():
+		weapon_tiers[weapon_id] = 0
 	_load_progress()
 
 
@@ -192,6 +200,39 @@ func effective_weapon_duration(base_duration: float) -> float:
 	return base_duration + upgrade_level("weapon_duration") * 2.0
 
 
+# Arsenal: per-weapon tier helpers -----------------------------------
+
+func get_weapon_tier(weapon_id: int) -> int:
+	return int(weapon_tiers.get(weapon_id, 0))
+
+
+func weapon_max_tier_index(weapon_id: int) -> int:
+	var tiers: Array = GameManager.WEAPON_TIERS.get(weapon_id, [])
+	return max(tiers.size() - 1, 0)
+
+
+# -1 if already at max tier.
+func weapon_next_upgrade_cost(weapon_id: int) -> int:
+	var tiers: Array = GameManager.WEAPON_TIERS.get(weapon_id, [])
+	var current: int = get_weapon_tier(weapon_id)
+	var next_index: int = current + 1
+	if next_index >= tiers.size():
+		return -1
+	return int(tiers[next_index].get("upgrade_cost", 0))
+
+
+func upgrade_weapon(weapon_id: int) -> bool:
+	var cost: int = weapon_next_upgrade_cost(weapon_id)
+	if cost < 0 or banked_kills < cost:
+		return false
+	banked_kills -= cost
+	weapon_tiers[weapon_id] = get_weapon_tier(weapon_id) + 1
+	banked_kills_changed.emit(banked_kills)
+	weapon_tier_changed.emit(weapon_id, int(weapon_tiers[weapon_id]))
+	_save_progress()
+	return true
+
+
 func _load_progress() -> void:
 	var cfg: ConfigFile = ConfigFile.new()
 	if cfg.load(PROGRESS_PATH) != OK:
@@ -201,6 +242,8 @@ func _load_progress() -> void:
 	banked_kills = int(cfg.get_value("progress", "banked_kills", 0))
 	for key in UPGRADES.keys():
 		upgrade_levels[key] = int(cfg.get_value("upgrades", key, 0))
+	for weapon_id in GameManager.WEAPON_TIERS.keys():
+		weapon_tiers[weapon_id] = int(cfg.get_value("arsenal", "tier_%d" % int(weapon_id), 0))
 
 
 func _save_progress() -> void:
@@ -210,4 +253,6 @@ func _save_progress() -> void:
 	cfg.set_value("progress", "banked_kills", banked_kills)
 	for key in UPGRADES.keys():
 		cfg.set_value("upgrades", key, upgrade_level(key))
+	for weapon_id in weapon_tiers.keys():
+		cfg.set_value("arsenal", "tier_%d" % int(weapon_id), int(weapon_tiers[weapon_id]))
 	cfg.save(PROGRESS_PATH)

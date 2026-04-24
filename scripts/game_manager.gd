@@ -48,6 +48,39 @@ const WEAPON_NAMES: Dictionary = {
 	WEAPON_ROCKET: "Rocket",
 }
 
+# Per-weapon tier stats. Each weapon has an array of tier dicts indexed
+# from 0. Tier 0 is free (the default behaviour); higher tiers are
+# bought with banked kills via LevelManager.upgrade_weapon.
+#
+# Keys vary by weapon:
+#   shotgun: pellets, damage
+#   machine_gun: damage, fire_mult   (fire_mult multiplies base interval)
+#   sniper: damage, lifetime_mult
+#   rocket: damage, radius, aoe_damage
+# Every entry carries upgrade_cost (0 for the free tier).
+const WEAPON_TIERS: Dictionary = {
+	WEAPON_SHOTGUN: [
+		{"pellets": 3, "damage": 1, "upgrade_cost": 0},
+		{"pellets": 4, "damage": 1, "upgrade_cost": 300},
+		{"pellets": 5, "damage": 2, "upgrade_cost": 900},
+	],
+	WEAPON_MACHINE_GUN: [
+		{"damage": 1, "fire_mult": 0.40, "upgrade_cost": 0},
+		{"damage": 1, "fire_mult": 0.33, "upgrade_cost": 400},
+		{"damage": 2, "fire_mult": 0.28, "upgrade_cost": 1000},
+	],
+	WEAPON_SNIPER: [
+		{"damage": 5, "lifetime_mult": 1.0, "upgrade_cost": 0},
+		{"damage": 7, "lifetime_mult": 1.0, "upgrade_cost": 500},
+		{"damage": 10, "lifetime_mult": 1.5, "upgrade_cost": 1200},
+	],
+	WEAPON_ROCKET: [
+		{"damage": 4, "radius": 3.5, "aoe_damage": 4, "upgrade_cost": 0},
+		{"damage": 5, "radius": 4.5, "aoe_damage": 5, "upgrade_cost": 600},
+		{"damage": 6, "radius": 5.5, "aoe_damage": 6, "upgrade_cost": 1500},
+	],
+}
+
 signal weapon_changed(weapon_id: int, time_left: float)
 signal wave_advanced(new_wave: int)
 
@@ -224,7 +257,7 @@ func current_fire_interval(base_interval: float) -> float:
 	var interval: float = base_interval
 	match active_weapon:
 		WEAPON_MACHINE_GUN:
-			interval = base_interval * 0.4  # ~2.5x faster
+			interval = base_interval * weapon_stat(WEAPON_MACHINE_GUN, "fire_mult", 0.4)
 		WEAPON_SNIPER:
 			interval = base_interval * 2.2  # slow but devastating
 		WEAPON_ROCKET:
@@ -233,6 +266,18 @@ func current_fire_interval(base_interval: float) -> float:
 			interval = base_interval
 	var total_mult: float = fire_rate_multiplier() * LevelManager.effective_fire_rate_multiplier()
 	return interval / total_mult
+
+
+# Read a single stat for the given weapon using the player's current
+# tier from LevelManager. Falls back to `default_value` if the weapon
+# has no catalog entry or the key is missing.
+func weapon_stat(weapon_id: int, key: String, default_value) -> Variant:
+	var tiers: Array = WEAPON_TIERS.get(weapon_id, [])
+	if tiers.is_empty():
+		return default_value
+	var tier_index: int = LevelManager.get_weapon_tier(weapon_id)
+	tier_index = clamp(tier_index, 0, tiers.size() - 1)
+	return tiers[tier_index].get(key, default_value)
 
 
 func end_run(won: bool) -> void:

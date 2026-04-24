@@ -48,40 +48,67 @@ func _shoot() -> void:
 	if bullet_scene == null:
 		return
 	var spawn_pos: Vector3 = global_position + BULLET_SPAWN_OFFSET
-	match GameManager.active_weapon:
-		GameManager.WEAPON_SHOTGUN:
-			_spawn_bullet(spawn_pos, Vector3(-0.22, 0, -0.98).normalized(), 1, false)
-			_spawn_bullet(spawn_pos, Vector3(0.0, 0, -1.0), 1, false)
-			_spawn_bullet(spawn_pos, Vector3(0.22, 0, -0.98).normalized(), 1, false)
-		GameManager.WEAPON_SNIPER:
-			_spawn_bullet(spawn_pos, Vector3(0.0, 0, -1.0), 5, true)
-		GameManager.WEAPON_ROCKET:
-			_spawn_rocket(spawn_pos, Vector3(0.0, 0, -1.0))
-		_:
-			_spawn_bullet(spawn_pos, Vector3(0.0, 0, -1.0), 1, false)
+	_fire_for_active_weapon(spawn_pos)
 	Effects.spawn_muzzle_flash(spawn_pos)
 
 
-func _spawn_bullet(spawn_pos: Vector3, direction: Vector3, damage: int, pierce_all: bool) -> void:
+func _fire_for_active_weapon(spawn_pos: Vector3) -> void:
+	match GameManager.active_weapon:
+		GameManager.WEAPON_SHOTGUN:
+			_fire_shotgun(spawn_pos)
+		GameManager.WEAPON_SNIPER:
+			_fire_sniper(spawn_pos)
+		GameManager.WEAPON_ROCKET:
+			_fire_rocket(spawn_pos)
+		GameManager.WEAPON_MACHINE_GUN:
+			var dmg: int = int(GameManager.weapon_stat(GameManager.WEAPON_MACHINE_GUN, "damage", 1))
+			_spawn_bullet(spawn_pos, Vector3(0.0, 0, -1.0), dmg, false)
+		_:
+			_spawn_bullet(spawn_pos, Vector3(0.0, 0, -1.0), 1, false)
+
+
+func _fire_shotgun(spawn_pos: Vector3) -> void:
+	var pellets: int = int(GameManager.weapon_stat(GameManager.WEAPON_SHOTGUN, "pellets", 3))
+	var damage: int = int(GameManager.weapon_stat(GameManager.WEAPON_SHOTGUN, "damage", 1))
+	pellets = max(pellets, 1)
+	var spread: float = 0.24
+	for i in pellets:
+		var t: float = 0.5 if pellets <= 1 else float(i) / float(pellets - 1)
+		var x: float = lerp(-spread, spread, t)
+		var dir: Vector3 = Vector3(x, 0, -1).normalized()
+		_spawn_bullet(spawn_pos, dir, damage, false)
+
+
+func _fire_sniper(spawn_pos: Vector3) -> void:
+	var damage: int = int(GameManager.weapon_stat(GameManager.WEAPON_SNIPER, "damage", 5))
+	var lifetime_mult: float = float(GameManager.weapon_stat(GameManager.WEAPON_SNIPER, "lifetime_mult", 1.0))
+	_spawn_bullet(spawn_pos, Vector3(0.0, 0, -1.0), damage, true, lifetime_mult)
+
+
+func _fire_rocket(spawn_pos: Vector3) -> void:
+	var bullet: Node3D = bullet_scene.instantiate() as Node3D
+	if bullet == null:
+		return
+	var dmg: int = int(GameManager.weapon_stat(GameManager.WEAPON_ROCKET, "damage", 4))
+	var radius: float = float(GameManager.weapon_stat(GameManager.WEAPON_ROCKET, "radius", 3.5))
+	var aoe: int = int(GameManager.weapon_stat(GameManager.WEAPON_ROCKET, "aoe_damage", 4))
+	bullet.set("direction", Vector3(0.0, 0, -1.0))
+	bullet.set("damage_override", dmg)
+	bullet.set("pierce_all", false)
+	bullet.set("explosion_radius", radius)
+	bullet.set("explosion_damage", aoe)
+	get_tree().current_scene.add_child(bullet)
+	bullet.global_position = spawn_pos
+
+
+func _spawn_bullet(spawn_pos: Vector3, direction: Vector3, damage: int, pierce_all: bool, lifetime_mult: float = 1.0) -> void:
 	var bullet: Node3D = bullet_scene.instantiate() as Node3D
 	if bullet == null:
 		return
 	bullet.set("direction", direction)
 	bullet.set("damage_override", damage)
 	bullet.set("pierce_all", pierce_all)
-	get_tree().current_scene.add_child(bullet)
-	bullet.global_position = spawn_pos
-
-
-func _spawn_rocket(spawn_pos: Vector3, direction: Vector3) -> void:
-	var bullet: Node3D = bullet_scene.instantiate() as Node3D
-	if bullet == null:
-		return
-	bullet.set("direction", direction)
-	bullet.set("damage_override", 4)
-	bullet.set("pierce_all", false)
-	bullet.set("explosion_radius", 3.5)
-	bullet.set("explosion_damage", 4)
+	bullet.set("lifetime_multiplier", lifetime_mult)
 	get_tree().current_scene.add_child(bullet)
 	bullet.global_position = spawn_pos
 
