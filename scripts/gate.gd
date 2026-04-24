@@ -25,10 +25,13 @@ extends Node3D
 @export var random_combo: bool = false
 
 const TRIGGER_DEPTH := 0.6
-const POS_MIN := 3
-const POS_MAX := 10
-const NEG_MIN := 3
-const NEG_MAX := 7
+# Narrow ranges so random combos still feel meaningful under SQUAD_CAP=9.
+# Positive gains of 2-4 are noticeable without instantly maxing out; negative
+# penalties of 1-4 push the squad back without collapsing it below 1.
+const POS_MIN := 2
+const POS_MAX := 4
+const NEG_MIN := 1
+const NEG_MAX := 4
 
 var _consumed: bool = false
 var _soldier: Node3D = null
