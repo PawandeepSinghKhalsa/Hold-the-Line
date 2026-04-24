@@ -88,6 +88,20 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -28)
 left_multiplier = 2
 right_multiplier = 3
 
+[node name="AdvanceGroupA" type="Node3D" parent="."]
+script = ExtResource("5_spawner")
+zombie_scene = ExtResource("4_zombie")
+zombies_per_lane = 2
+row_spacing = 1.6
+horde_front_z = -7.0
+
+[node name="AdvanceGroupB" type="Node3D" parent="."]
+script = ExtResource("5_spawner")
+zombie_scene = ExtResource("4_zombie")
+zombies_per_lane = 4
+row_spacing = 1.8
+horde_front_z = -18.0
+
 [node name="HordeSpawner" type="Node3D" parent="."]
 script = ExtResource("5_spawner")
 zombie_scene = ExtResource("4_zombie")

@@ -39,6 +39,12 @@ func set_level_zombie_count(n: int) -> void:
 	zombies_remaining_changed.emit(zombies_remaining)
 
 
+func add_zombies(n: int) -> void:
+	zombies_total += n
+	zombies_remaining += n
+	zombies_remaining_changed.emit(zombies_remaining)
+
+
 func on_zombie_killed() -> void:
 	if not is_running:
 		return

@@ -17,8 +17,8 @@ func _ready() -> void:
 func _spawn_horde() -> void:
 	if zombie_scene == null:
 		return
-	var total := zombies_per_lane * GameManager.LANE_COUNT
-	GameManager.set_level_zombie_count(total)
+	var total: int = zombies_per_lane * GameManager.LANE_COUNT
+	GameManager.add_zombies(total)
 
 	for lane_idx in GameManager.LANE_COUNT:
 		for row in zombies_per_lane:
