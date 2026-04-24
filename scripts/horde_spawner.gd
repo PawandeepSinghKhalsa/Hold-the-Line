@@ -1,9 +1,12 @@
 extends Node3D
 
-# Spawns a rectangular block of zombies across the three lanes. Back rows
-# (controlled by `tough_rows_from_back`) get max_hp=2 so they take two
-# bullets to drop, creating a natural difficulty ramp deeper into the
-# horde without bloating the total zombie count.
+# Spawns a rectangular block of zombies across the three lanes.
+#
+# - Back rows (controlled by `tough_rows_from_back`) get max_hp=`tough_hp`
+#   so they take more bullets to drop.
+# - Every 1-HP zombie has a `weak_ratio` chance of being marked `is_weak`,
+#   which makes it smaller, paler, and pierceable by bullets (kill + the
+#   bullet keeps flying through the rest of the lane).
 
 @export var zombie_scene: PackedScene
 @export var zombies_per_lane: int = 34
@@ -11,6 +14,7 @@ extends Node3D
 @export var horde_front_z: float = -95.0
 @export var tough_rows_from_back: int = 0
 @export var tough_hp: int = 2
+@export_range(0.0, 1.0, 0.05) var weak_ratio: float = 0.0
 
 
 func _ready() -> void:
@@ -31,10 +35,13 @@ func _spawn_horde() -> void:
 			var zombie: Node3D = zombie_node as Node3D
 			if zombie == null:
 				continue
-			# Must set max_hp before add_child so zombie._ready() sees the
-			# right value and picks the tough material.
-			if row >= tough_threshold and tough_rows_from_back > 0:
+			var is_tough: bool = row >= tough_threshold and tough_rows_from_back > 0
+			# Set zombie properties before add_child so zombie._ready()
+			# sees the right values when picking its tier.
+			if is_tough:
 				zombie.set("max_hp", tough_hp)
+			elif weak_ratio > 0.0 and randf() < weak_ratio:
+				zombie.set("is_weak", true)
 			zombie.set("lane_index", lane_idx)
 			get_tree().current_scene.add_child(zombie)
 			var x_jitter: float = randf_range(-0.4, 0.4)

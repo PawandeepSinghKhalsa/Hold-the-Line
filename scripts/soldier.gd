@@ -4,16 +4,22 @@ extends CharacterBody3D
 # strafe laterally at STRAFE_SPEED; release stops the sideways motion.
 # On mobile, holding a finger on the left or right half of the screen
 # presses the same action, so a sustained touch strafes continuously.
+#
+# Has HP (instead of instant death on zombie contact). Zombies deal
+# damage-per-second while in melee range; run ends when HP hits 0.
 
 signal lane_changed(new_lane: int)
+signal hp_changed(current: int, maximum: int)
 
 const STRAFE_SPEED := 1.2
 const BRIDGE_HALF_WIDTH := 2.1
 const FIRE_INTERVAL := 0.33
 const BULLET_SPAWN_OFFSET := Vector3(0, 0.9, -0.5)
+const MAX_HP := 100
 
 @export var bullet_scene: PackedScene
 
+var hp: int = MAX_HP
 var _fire_cooldown: float = 0.0
 var _touch_down: bool = false
 var _last_reported_lane: int = -1
@@ -22,6 +28,8 @@ var _last_reported_lane: int = -1
 func _ready() -> void:
 	GameManager.reset()
 	add_to_group("soldier")
+	hp = MAX_HP
+	hp_changed.emit(hp, MAX_HP)
 	_emit_lane_for_current_x()
 
 
@@ -96,4 +104,15 @@ func _emit_lane_for_current_x() -> void:
 
 
 func take_melee_hit() -> void:
-	GameManager.end_run(false)
+	# Legacy method name — zombies now call take_damage for DPS, but keep
+	# this as an alias so the Phase-2 insta-kill callers still work.
+	take_damage(MAX_HP)
+
+
+func take_damage(amount: int) -> void:
+	if not GameManager.is_running or hp <= 0:
+		return
+	hp = max(0, hp - amount)
+	hp_changed.emit(hp, MAX_HP)
+	if hp <= 0:
+		GameManager.end_run(false)

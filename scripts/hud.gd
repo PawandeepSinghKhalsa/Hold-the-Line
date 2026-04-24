@@ -5,6 +5,8 @@ extends CanvasLayer
 # button that routes Next Level (on victory) or Retry (on defeat).
 
 @onready var level_label: Label = $Margin/VBox/LevelLabel
+@onready var leader_hp_label: Label = $Margin/VBox/LeaderHpLabel
+@onready var leader_hp_bar: ProgressBar = $Margin/VBox/LeaderHpBar
 @onready var lane_label: Label = $Margin/VBox/LaneLabel
 @onready var squad_label: Label = $Margin/VBox/SquadLabel
 @onready var zombies_label: Label = $Margin/VBox/ZombiesLabel
@@ -14,8 +16,10 @@ extends CanvasLayer
 @onready var banner: Label = $Margin/VBox/Banner
 @onready var supercharge_button: Button = $SuperchargeButton
 @onready var post_run_button: Button = $PostRunButton
+@onready var damage_flash: ColorRect = $DamageFlash
 
 var _last_run_won: bool = false
+var _last_hp: int = -1
 
 
 func _ready() -> void:
@@ -36,9 +40,13 @@ func _ready() -> void:
 	_on_supercharge_boost_changed(GameManager.is_boost_active(), 0.0)
 	level_label.text = LevelManager.current_name()
 	var soldier_node: Node = get_tree().get_first_node_in_group("soldier")
-	if soldier_node != null and soldier_node.has_signal("lane_changed"):
-		soldier_node.lane_changed.connect(_on_lane_changed)
-		_on_lane_changed(soldier_node.lane_index)
+	if soldier_node != null:
+		if soldier_node.has_signal("lane_changed"):
+			soldier_node.lane_changed.connect(_on_lane_changed)
+			_on_lane_changed(soldier_node.lane_index)
+		if soldier_node.has_signal("hp_changed"):
+			soldier_node.hp_changed.connect(_on_leader_hp_changed)
+			_on_leader_hp_changed(soldier_node.hp, soldier_node.MAX_HP)
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -57,6 +65,29 @@ func _process(_delta: float) -> void:
 
 func _on_lane_changed(new_lane: int) -> void:
 	lane_label.text = "Lane: %d" % (new_lane + 1)
+
+
+func _on_leader_hp_changed(current: int, maximum: int) -> void:
+	leader_hp_bar.max_value = maximum
+	leader_hp_bar.value = current
+	leader_hp_label.text = "Leader HP: %d / %d" % [current, maximum]
+	var fraction: float = float(current) / float(max(maximum, 1))
+	if fraction > 0.6:
+		leader_hp_bar.modulate = Color(0.3, 1, 0.4, 1)
+	elif fraction > 0.3:
+		leader_hp_bar.modulate = Color(1, 0.9, 0.35, 1)
+	else:
+		leader_hp_bar.modulate = Color(1, 0.35, 0.35, 1)
+	# Flash red when HP drops (not on initial set or refill).
+	if _last_hp != -1 and current < _last_hp:
+		_pulse_damage_flash()
+	_last_hp = current
+
+
+func _pulse_damage_flash() -> void:
+	damage_flash.color = Color(1, 0.1, 0.1, 0.35)
+	var tween: Tween = create_tween()
+	tween.tween_property(damage_flash, "color:a", 0.0, 0.25)
 
 
 func _on_squad_changed(new_size: int) -> void:

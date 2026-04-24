@@ -5,6 +5,15 @@
 [node name="HUD" type="CanvasLayer"]
 script = ExtResource("1_hud")
 
+[node name="DamageFlash" type="ColorRect" parent="."]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(1, 0.1, 0.1, 0.0)
+mouse_filter = 2
+
 [node name="Margin" type="MarginContainer" parent="."]
 anchors_preset = 15
 anchor_right = 1.0
@@ -22,6 +31,18 @@ layout_mode = 2
 [node name="LevelLabel" type="Label" parent="Margin/VBox"]
 layout_mode = 2
 text = "Level 1"
+
+[node name="LeaderHpLabel" type="Label" parent="Margin/VBox"]
+layout_mode = 2
+text = "Leader HP: 100 / 100"
+
+[node name="LeaderHpBar" type="ProgressBar" parent="Margin/VBox"]
+custom_minimum_size = Vector2(240, 22)
+layout_mode = 2
+max_value = 100.0
+value = 100.0
+show_percentage = false
+modulate = Color(0.3, 1, 0.4, 1)
 
 [node name="LaneLabel" type="Label" parent="Margin/VBox"]
 layout_mode = 2

@@ -100,6 +100,7 @@ zombie_scene = ExtResource("4_zombie")
 zombies_per_lane = 1
 row_spacing = 1.6
 horde_front_z = -18.0
+weak_ratio = 0.5
 
 [node name="AdvanceGroupB" type="Node3D" parent="."]
 script = ExtResource("5_spawner")
@@ -107,6 +108,7 @@ zombie_scene = ExtResource("4_zombie")
 zombies_per_lane = 4
 row_spacing = 1.6
 horde_front_z = -24.0
+weak_ratio = 0.4
 
 [node name="AdvanceGroupC" type="Node3D" parent="."]
 script = ExtResource("5_spawner")
@@ -114,6 +116,7 @@ zombie_scene = ExtResource("4_zombie")
 zombies_per_lane = 6
 row_spacing = 1.5
 horde_front_z = -40.0
+weak_ratio = 0.3
 
 [node name="HordeSpawner" type="Node3D" parent="."]
 script = ExtResource("5_spawner")
@@ -123,6 +126,7 @@ row_spacing = 0.9
 horde_front_z = -120.0
 tough_rows_from_back = 45
 tough_hp = 2
+weak_ratio = 0.25
 
 [node name="BossSpawner" type="Node3D" parent="."]
 script = ExtResource("7_boss")

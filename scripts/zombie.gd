@@ -1,65 +1,81 @@
 extends CharacterBody3D
 
 # Actively chases the soldier. Each frame the zombie steers toward the
-# soldier's current XZ position. Melee contact uses a 2D (XZ) distance
-# check to avoid Y drift hiding the game-over trigger.
+# soldier's current XZ position. Melee contact deals damage-per-second
+# (tier-dependent) to whichever target is closest within MELEE_RANGE,
+# instead of instant-killing the leader.
+#
+# Tiers (derived from max_hp and is_weak):
+#   weak     : smaller, pale pink, low DPS, 1 HP; bullets pierce through
+#   regular  : default red, 1 HP, medium DPS
+#   tough    : 2 HP, taller + darker, higher DPS
+#   boss     : >= BOSS_HP_THRESHOLD, huge purple, highest DPS, slow chase
 
 const WALK_SPEED := 3.0
 const MELEE_RANGE := 0.9
 # Extra multiplier on the lateral component of the chase vector so zombies
 # from outer lanes visibly peel toward the soldier's lane.
 const LATERAL_GAIN := 1.4
-# HP thresholds that promote a zombie into boss tier: bigger, slower,
-# and coloured differently so the player sees them coming.
 const BOSS_HP_THRESHOLD := 20
 
 @export var max_hp: int = 1
+@export var is_weak: bool = false
 var hp: int
 var lane_index: int = 1
+var damage_per_second: float = 10.0
 var _target_jitter: Vector3 = Vector3.ZERO
 var _walk_speed: float = WALK_SPEED
 var _melee_range: float = MELEE_RANGE
-# Latched once the zombie's first death fires so bullets that land in the
-# same frame before queue_free resolves can't decrement the counter again.
 var _dead: bool = false
 
 
 func _ready() -> void:
 	hp = max_hp
 	add_to_group("zombies")
+	_configure_tier()
+	_target_jitter = Vector3(randf_range(-0.8, 0.8), 0.0, randf_range(-0.4, 0.4))
+	_apply_appearance()
+
+
+func _configure_tier() -> void:
 	if max_hp >= BOSS_HP_THRESHOLD:
 		add_to_group("bosses")
 		_walk_speed = WALK_SPEED * 0.55
 		_melee_range = MELEE_RANGE * 1.7
-	_target_jitter = Vector3(randf_range(-0.8, 0.8), 0.0, randf_range(-0.4, 0.4))
-	_apply_tough_appearance_if_needed()
+		damage_per_second = 40.0
+	elif max_hp >= 2:
+		damage_per_second = 18.0
+	elif is_weak:
+		damage_per_second = 5.0
+	else:
+		damage_per_second = 10.0
 
 
-func _apply_tough_appearance_if_needed() -> void:
-	# Tough zombies (max_hp >= 2) get a darker body and a taller capsule
-	# so the player can spot and prioritise them. Bosses (max_hp >=
-	# BOSS_HP_THRESHOLD) scale wider AND taller and wear a distinct
-	# purple-black colour so they read as a finale. Material is
-	# duplicated per instance so colour changes don't leak to other
-	# zombies.
-	if max_hp < 2:
-		return
-
-	var height_scale: float = 1.3
+func _apply_appearance() -> void:
+	# Weak zombies are smaller and paler; tough zombies grow and darken;
+	# boss zombies grow big, turn purple, and glow. Each tier duplicates
+	# the shared material so per-instance colour changes don't leak.
+	var height_scale: float = 1.0
 	var width_scale: float = 1.0
-	var albedo: Color = Color(0.55, 0.12, 0.18, 1)
+	var albedo: Color = Color(0.85, 0.25, 0.25, 1)
+	var want_glow: bool = false
 
 	if max_hp >= BOSS_HP_THRESHOLD:
 		height_scale = 2.4
 		width_scale = 1.9
 		albedo = Color(0.28, 0.08, 0.42, 1)
+		want_glow = true
 	elif max_hp >= 3:
 		height_scale = 1.55
 		albedo = Color(0.35, 0.08, 0.15, 1)
+	elif max_hp >= 2:
+		height_scale = 1.3
+		albedo = Color(0.55, 0.12, 0.18, 1)
+	elif is_weak:
+		height_scale = 0.85
+		width_scale = 0.85
+		albedo = Color(1.0, 0.55, 0.65, 1)
 
-	# Base capsule: radius 0.3, height 1.5, positioned at local y=0.75 so
-	# the feet sit at y=0. When we scale along Y the centre needs to move
-	# up by half the added height so the feet stay planted on the bridge.
 	var base_height: float = 1.5
 	var base_center_y: float = 0.75
 	var lifted_center_y: float = base_center_y + base_height * 0.5 * (height_scale - 1.0)
@@ -76,7 +92,7 @@ func _apply_tough_appearance_if_needed() -> void:
 			var standard_mat: StandardMaterial3D = unique_material as StandardMaterial3D
 			if standard_mat != null:
 				standard_mat.albedo_color = albedo
-				if max_hp >= BOSS_HP_THRESHOLD:
+				if want_glow:
 					standard_mat.emission_enabled = true
 					standard_mat.emission = Color(0.55, 0.15, 0.8, 1)
 					standard_mat.emission_energy_multiplier = 0.4
@@ -88,7 +104,7 @@ func _apply_tough_appearance_if_needed() -> void:
 		collision_shape.position = Vector3(0, lifted_center_y, 0)
 
 
-func _physics_process(_delta: float) -> void:
+func _physics_process(delta: float) -> void:
 	if not GameManager.is_running:
 		velocity = Vector3.ZERO
 		return
@@ -110,12 +126,29 @@ func _physics_process(_delta: float) -> void:
 	move_and_slide()
 	global_position.y = 0.1
 
-	if soldier != null:
-		var me: Vector2 = Vector2(global_position.x, global_position.z)
-		var target_pos: Vector2 = Vector2(soldier.global_position.x, soldier.global_position.z)
-		if me.distance_to(target_pos) < _melee_range:
-			if soldier.has_method("take_melee_hit"):
-				soldier.take_melee_hit()
+	if soldier == null:
+		return
+
+	# Damage the closest squad member (leader or clone) in melee range.
+	var damage_this_tick: int = max(1, int(ceil(damage_per_second * delta)))
+	var my_pos: Vector2 = Vector2(global_position.x, global_position.z)
+	var soldier_pos: Vector2 = Vector2(soldier.global_position.x, soldier.global_position.z)
+	var best_target: Node3D = soldier
+	var best_dist: float = my_pos.distance_to(soldier_pos)
+
+	for clone_node in get_tree().get_nodes_in_group("clones"):
+		var clone_obj: Node3D = clone_node as Node3D
+		if clone_obj == null:
+			continue
+		var cpos: Vector2 = Vector2(clone_obj.global_position.x, clone_obj.global_position.z)
+		var d: float = my_pos.distance_to(cpos)
+		if d < best_dist:
+			best_dist = d
+			best_target = clone_obj
+
+	if best_dist < _melee_range and best_target != null:
+		if best_target.has_method("take_damage"):
+			best_target.take_damage(damage_this_tick)
 
 
 func take_damage(amount: int) -> void:

@@ -88,6 +88,15 @@ func on_zombie_killed() -> void:
 		end_run(true)
 
 
+# Called by clones when a zombie kills them. Drops squad size but keeps
+# the run alive until the leader himself dies.
+func on_clone_died() -> void:
+	if not is_running:
+		return
+	squad_size = max(1, squad_size - 1)
+	squad_changed.emit(squad_size)
+
+
 func apply_multiplier(multiplier: int) -> int:
 	var before: int = squad_size
 	squad_size = clamp(squad_size * multiplier, 1, SQUAD_CAP)
