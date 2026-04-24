@@ -27,6 +27,9 @@ var _target_jitter: Vector3 = Vector3.ZERO
 var _walk_speed: float = WALK_SPEED
 var _melee_range: float = MELEE_RANGE
 var _dead: bool = false
+var _hp_bar_fill_mesh: QuadMesh = null
+var _hp_bar_fill: MeshInstance3D = null
+var _hp_bar_max_width: float = 3.0
 
 
 func _ready() -> void:
@@ -35,6 +38,8 @@ func _ready() -> void:
 	_configure_tier()
 	_target_jitter = Vector3(randf_range(-0.8, 0.8), 0.0, randf_range(-0.4, 0.4))
 	_apply_appearance()
+	if max_hp >= BOSS_HP_THRESHOLD:
+		_create_boss_hp_bar()
 
 
 func _configure_tier() -> void:
@@ -155,6 +160,7 @@ func take_damage(amount: int) -> void:
 	if _dead:
 		return
 	hp -= amount
+	_update_boss_hp_bar()
 	if hp <= 0:
 		_dead = true
 		var burst_pos: Vector3 = global_position + Vector3(0, 0.85, 0)
@@ -165,3 +171,53 @@ func take_damage(amount: int) -> void:
 		GameManager.on_zombie_killed()
 		GameManager.add_kill_charge()
 		queue_free()
+
+
+func _create_boss_hp_bar() -> void:
+	# Floating HP bar above the boss's head. Background is a dark rect;
+	# the fill is a red rect whose QuadMesh size.x shrinks from full to
+	# zero as hp falls. Both are billboarded + unshaded + depth-test-off
+	# so the bar always faces the camera and draws on top of geometry.
+	var bar_y: float = 4.6
+
+	var bg: MeshInstance3D = MeshInstance3D.new()
+	var bg_mesh: QuadMesh = QuadMesh.new()
+	bg_mesh.size = Vector2(_hp_bar_max_width + 0.12, 0.38)
+	var bg_mat: StandardMaterial3D = StandardMaterial3D.new()
+	bg_mat.albedo_color = Color(0, 0, 0, 0.8)
+	bg_mat.billboard_mode = BaseMaterial3D.BILLBOARD_ENABLED
+	bg_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	bg_mat.no_depth_test = true
+	bg_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	bg_mesh.material = bg_mat
+	bg.mesh = bg_mesh
+	bg.position = Vector3(0, bar_y, 0)
+	add_child(bg)
+
+	var fill: MeshInstance3D = MeshInstance3D.new()
+	_hp_bar_fill_mesh = QuadMesh.new()
+	_hp_bar_fill_mesh.size = Vector2(_hp_bar_max_width, 0.3)
+	var fill_mat: StandardMaterial3D = StandardMaterial3D.new()
+	fill_mat.albedo_color = Color(1, 0.22, 0.22, 1)
+	fill_mat.billboard_mode = BaseMaterial3D.BILLBOARD_ENABLED
+	fill_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	fill_mat.no_depth_test = true
+	fill_mat.emission_enabled = true
+	fill_mat.emission = Color(1, 0.3, 0.3, 1)
+	fill_mat.emission_energy_multiplier = 0.8
+	_hp_bar_fill_mesh.material = fill_mat
+	fill.mesh = _hp_bar_fill_mesh
+	fill.position = Vector3(0, bar_y, 0.02)
+	add_child(fill)
+	_hp_bar_fill = fill
+
+
+func _update_boss_hp_bar() -> void:
+	if _hp_bar_fill == null or _hp_bar_fill_mesh == null:
+		return
+	var fraction: float = clamp(float(hp) / float(max(max_hp, 1)), 0.0, 1.0)
+	var new_width: float = _hp_bar_max_width * fraction
+	_hp_bar_fill_mesh.size.x = new_width
+	# Anchor to the left edge so the bar drains rightward instead of
+	# shrinking from both sides.
+	_hp_bar_fill.position.x = -(_hp_bar_max_width - new_width) / 2.0
