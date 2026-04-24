@@ -1,10 +1,9 @@
 extends CharacterBody3D
 
-# Actively chases the soldier. No longer pinned to a lane — each frame the
-# zombie steers toward the soldier's current position, so strafing to a
-# new lane no longer guarantees safety. Front zombies block the ones
-# behind them (CharacterBody3D collision), so the horde naturally forms
-# a mass instead of stacking on a single point.
+# Actively chases the soldier. Each frame the zombie steers toward the
+# soldier's current XZ position, so strafing no longer guarantees safety.
+# Melee contact uses a 2D (XZ) distance check to avoid Y drift from
+# bridge physics preventing the game-over trigger.
 
 const WALK_SPEED := 3.0
 const MELEE_RANGE := 0.9
@@ -22,7 +21,6 @@ var _target_jitter: Vector3 = Vector3.ZERO
 func _ready() -> void:
 	hp = max_hp
 	add_to_group("zombies")
-	# Per-zombie offset so 42 zombies don't all pile on the same world point.
 	_target_jitter = Vector3(randf_range(-0.8, 0.8), 0.0, randf_range(-0.4, 0.4))
 
 
@@ -46,10 +44,14 @@ func _physics_process(_delta: float) -> void:
 			velocity = Vector3.ZERO
 
 	move_and_slide()
+	global_position.y = 0.1
 
-	if soldier != null and global_position.distance_to(soldier.global_position) < MELEE_RANGE:
-		if soldier.has_method("take_melee_hit"):
-			soldier.take_melee_hit()
+	if soldier != null:
+		var me := Vector2(global_position.x, global_position.z)
+		var target_pos := Vector2(soldier.global_position.x, soldier.global_position.z)
+		if me.distance_to(target_pos) < MELEE_RANGE:
+			if soldier.has_method("take_melee_hit"):
+				soldier.take_melee_hit()
 
 
 func take_damage(amount: int) -> void:
