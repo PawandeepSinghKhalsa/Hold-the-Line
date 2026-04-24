@@ -15,6 +15,7 @@ extends Node3D
 @export var tough_rows_from_back: int = 0
 @export var tough_hp: int = 2
 @export_range(0.0, 1.0, 0.05) var weak_ratio: float = 0.0
+@export_range(0.0, 1.0, 0.05) var runner_ratio: float = 0.0
 
 
 func _ready() -> void:
@@ -40,8 +41,12 @@ func _spawn_horde() -> void:
 			# sees the right values when picking its tier.
 			if is_tough:
 				zombie.set("max_hp", tough_hp)
-			elif weak_ratio > 0.0 and randf() < weak_ratio:
-				zombie.set("is_weak", true)
+			else:
+				var r: float = randf()
+				if r < runner_ratio:
+					zombie.set("is_runner", true)
+				elif r < runner_ratio + weak_ratio:
+					zombie.set("is_weak", true)
 			zombie.set("lane_index", lane_idx)
 			get_tree().current_scene.add_child(zombie)
 			var x_jitter: float = randf_range(-0.4, 0.4)

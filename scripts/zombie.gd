@@ -20,6 +20,7 @@ const BOSS_HP_THRESHOLD := 20
 
 @export var max_hp: int = 1
 @export var is_weak: bool = false
+@export var is_runner: bool = false
 var hp: int
 var lane_index: int = 1
 var damage_per_second: float = 10.0
@@ -50,6 +51,13 @@ func _configure_tier() -> void:
 		damage_per_second = 40.0
 	elif max_hp >= 2:
 		damage_per_second = 18.0
+	elif is_runner:
+		# Runner: fast, glass-cannon pressure. Small hitbox, high lunge
+		# damage, noticeably faster than the base pace so the player
+		# has to react.
+		_walk_speed = WALK_SPEED * 1.8
+		_melee_range = MELEE_RANGE * 0.95
+		damage_per_second = 15.0
 	elif is_weak:
 		damage_per_second = 5.0
 	else:
@@ -76,6 +84,12 @@ func _apply_appearance() -> void:
 	elif max_hp >= 2:
 		height_scale = 1.3
 		albedo = Color(0.55, 0.12, 0.18, 1)
+	elif is_runner:
+		# Orange, smaller silhouette so players can pick them out of the
+		# horde visually and react before they close the gap.
+		height_scale = 0.8
+		width_scale = 0.75
+		albedo = Color(1.0, 0.55, 0.12, 1)
 	elif is_weak:
 		height_scale = 0.85
 		width_scale = 0.85

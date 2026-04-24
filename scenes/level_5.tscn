@@ -144,7 +144,8 @@ row_spacing = 0.75
 horde_front_z = -160.0
 tough_rows_from_back = 90
 tough_hp = 3
-weak_ratio = 0.2
+weak_ratio = 0.18
+runner_ratio = 0.15
 
 [node name="BossSpawnerLeft" type="Node3D" parent="."]
 script = ExtResource("7_boss")

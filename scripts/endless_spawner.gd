@@ -59,7 +59,8 @@ func _spawn_wave() -> void:
 	var tough_hp: int = 2
 	if wave >= 8:
 		tough_hp = 3
-	var weak_chance: float = clamp(0.5 - wave * 0.02, 0.1, 0.5)
+	var runner_chance: float = clamp(0.05 + wave * 0.02, 0.0, 0.35)
+	var weak_chance: float = clamp(0.45 - wave * 0.02, 0.1, 0.45)
 
 	for lane_idx in GameManager.LANE_COUNT:
 		for row in per_lane:
@@ -69,8 +70,12 @@ func _spawn_wave() -> void:
 			var is_tough: bool = randf() < tough_chance
 			if is_tough:
 				zombie.set("max_hp", tough_hp)
-			elif randf() < weak_chance:
-				zombie.set("is_weak", true)
+			else:
+				var r: float = randf()
+				if r < runner_chance:
+					zombie.set("is_runner", true)
+				elif r < runner_chance + weak_chance:
+					zombie.set("is_weak", true)
 			zombie.set("lane_index", lane_idx)
 			GameManager.add_zombies(1)
 			get_tree().current_scene.add_child(zombie)
