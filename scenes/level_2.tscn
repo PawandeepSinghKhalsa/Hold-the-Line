@@ -97,9 +97,9 @@ right_multiplier = 4
 [node name="AdvanceGroupA" type="Node3D" parent="."]
 script = ExtResource("5_spawner")
 zombie_scene = ExtResource("4_zombie")
-zombies_per_lane = 2
+zombies_per_lane = 1
 row_spacing = 1.6
-horde_front_z = -14.0
+horde_front_z = -18.0
 
 [node name="AdvanceGroupB" type="Node3D" parent="."]
 script = ExtResource("5_spawner")
