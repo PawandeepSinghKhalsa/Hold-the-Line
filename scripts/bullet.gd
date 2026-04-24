@@ -1,8 +1,7 @@
 extends Area3D
 
 # Travels straight forward (-Z) from the soldier. Uses a distance check
-# against zombies in the "zombies" group every physics tick instead of
-# Area3D's body_entered signal, which proved unreliable on the web export.
+# against the zombies group every physics tick.
 
 const SPEED := 25.0
 const DAMAGE := 1
@@ -19,8 +18,9 @@ func _physics_process(delta: float) -> void:
 		return
 	global_position.z -= SPEED * delta
 
-	for zombie in get_tree().get_nodes_in_group("zombies"):
-		if not is_instance_valid(zombie):
+	for zombie_node in get_tree().get_nodes_in_group("zombies"):
+		var zombie: Node3D = zombie_node as Node3D
+		if zombie == null or not is_instance_valid(zombie):
 			continue
 		var zombie_center: Vector3 = zombie.global_position + Vector3(0, 0.75, 0)
 		if global_position.distance_to(zombie_center) < HIT_RADIUS:

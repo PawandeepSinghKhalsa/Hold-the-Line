@@ -14,14 +14,14 @@ func _ready() -> void:
 	GameManager.zombies_remaining_changed.connect(_on_zombies_changed)
 	banner.visible = false
 	_on_zombies_changed(GameManager.zombies_remaining)
-	var soldier := get_tree().get_first_node_in_group("soldier")
-	if soldier != null and soldier.has_signal("lane_changed"):
-		soldier.lane_changed.connect(_on_lane_changed)
-		_on_lane_changed(soldier.lane_index)
+	var soldier_node: Node = get_tree().get_first_node_in_group("soldier")
+	if soldier_node != null and soldier_node.has_signal("lane_changed"):
+		soldier_node.lane_changed.connect(_on_lane_changed)
+		_on_lane_changed(soldier_node.lane_index)
 
 
 func _process(_delta: float) -> void:
-	var soldier := get_tree().get_first_node_in_group("soldier")
+	var soldier: Node3D = get_tree().get_first_node_in_group("soldier") as Node3D
 	if soldier == null:
 		return
 	var distance: float = max(0.0, -soldier.global_position.z)
